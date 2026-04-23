@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "leworldmodel-judge"
+version = "0.1.0"
+description = "JEPA-style world-model-derived trajectory judge for manipulation RL"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Abdel"}]
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
