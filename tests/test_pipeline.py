@@ -167,7 +167,7 @@ def test_sparse_reward_prefix_uses_success_signal_not_dense_reward():
 
 
 def test_successful_synthetic_prefix_has_positive_progress_signal():
-    rows = collect_synthetic('reach-v3', 1)
+    rows = collect_synthetic('reach-v3', 1, policy_family='expert')
     prefix = build_prefixes(rows, (0.5,))[0].to_dict()
 
     assert prefix['progress_proxy'] > 0.0

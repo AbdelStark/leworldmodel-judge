@@ -38,16 +38,17 @@ def heuristic_surprise_score(prefix: dict) -> dict:
         + 0.05 * success
     )
     failure = _clip01(
-        0.28 * stall
-        + 0.20 * distance_gap
-        + 0.20 * (1.0 - on_track)
-        + 0.15 * prefix_fraction * (1.0 - in_place)
-        + 0.10 * (1.0 - reward_density)
-        + 0.07 * (1.0 - target_proximity)
+        0.12 * stall
+        + 0.18 * distance_gap
+        + 0.16 * (1.0 - on_track)
+        + 0.10 * prefix_fraction * (1.0 - in_place)
+        + 0.06 * (1.0 - reward_density)
+        + 0.05 * (1.0 - target_proximity)
+        + 0.33 * distance_regret
     )
     implausibility = _clip01(
-        0.45 * abs(progress - distance_progress)
-        + 0.30 * distance_regret
+        0.35 * abs(progress - distance_progress)
+        + 0.40 * distance_regret
         + 0.25 * max(0.0, stall - reward_density)
     )
 

@@ -197,6 +197,7 @@ def _prefix_labels(
     far_from_target = last_distance > 0.20
     no_contact = grasp < 0.15 and success == 0.0
     weak_prefix = progress < 0.20 and reward_density < 0.10
+    distance_regret = max(0.0, last_distance - _metric_value(metrics, 'target_distance_best', last_distance))
 
     if final_success:
         if progress >= 0.35 or success > 0.0 or in_place >= 0.35:
@@ -213,6 +214,8 @@ def _prefix_labels(
             return False, 'recoverable'
         return False, 'at_risk'
 
+    if prefix_fraction >= 0.75 and distance_regret > 0.18 and last_distance > 0.30:
+        return True, 'doomed'
     if prefix_fraction >= 0.75 and stalled and far_from_target and no_contact:
         return True, 'doomed'
     if prefix_fraction >= 0.50 and stalled and far_from_target and weak_prefix and no_contact:
