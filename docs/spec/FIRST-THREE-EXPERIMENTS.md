@@ -1,14 +1,16 @@
 # FIRST-THREE-EXPERIMENTS
 
-## Experiment 1 — baseline-only trajectory readout
+## Experiment 1 — baseline-only benchmark pass
 Goal:
-- collect rollouts
+- collect or synthesize rollouts for `reach-v2`, `push-v2`, `pick-place-v2`
+- build prefixes at 25/50/75%
 - compute sparse reward and terminal-success views
 - prove what those signals miss on partial prefixes
 
 ## Experiment 2 — first judge signal
 Goal:
 - add one world-model-derived score
+- first acceptable v1: a lightweight surprise / residual-inspired signal
 - measure whether it improves early failure detection or ranking
 
 ## Experiment 3 — uncertainty / implausibility extension
