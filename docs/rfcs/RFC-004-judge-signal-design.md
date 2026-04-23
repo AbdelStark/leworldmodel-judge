@@ -1,3 +1,15 @@
 # RFC-004 — Judge signal design
 
-The first signal should be simple, benchmarkable, and judged against sparse reward rather than sold as a universal reward model.
+## Decision
+The first judge signal must be simple, benchmarkable, and explicitly compared against sparse reward.
+
+## Preferred v1 signals
+- latent surprise / residual
+- rollout consistency
+- disagreement-based uncertainty
+
+## Rejected v1 pattern
+Do not start with a giant opaque scalar called “judge score” with unclear semantics.
+
+## Consequence
+All judge outputs should be decomposed into named sub-signals where possible.

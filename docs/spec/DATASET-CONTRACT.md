@@ -1,15 +1,31 @@
 # DATASET-CONTRACT
 
-## Each stored record should include
-- observation or observation pointer
-- action
-- reward
-- done flag
-- task id
-- episode id
-- timestep
-- final success label
-- partial-prefix position
+## Rollout schema
+Each stored step should include:
+- `episode_id`
+- `task_id`
+- `timestep`
+- `observation`
+- `action`
+- `reward`
+- `done`
+- `success_label`
+- optional metadata
 
-## v1 dataset stance
-Start with one manipulation family only. Do not build general ingestion.
+## Prefix schema
+Each prefix should include:
+- episode reference
+- prefix cutoff index
+- prefix fraction or ratio
+- final success label
+- any derived failure/recoverability labels
+
+## Storage stance
+V1 prefers simple file-based storage:
+- JSONL
+- NPZ
+- Parquet if needed later
+
+## v1 environment stance
+Start with one manipulation family only.
+Do not build general ingestion.

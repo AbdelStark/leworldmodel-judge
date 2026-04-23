@@ -1,11 +1,16 @@
-# Architecture sketch
+# Architecture
 
-Narrative layer:
-- LeWorldModel / JEPA world-model trajectory judge
+## Narrative layer
+- LeWorldModel / JEPA-style world-model-derived trajectory judge
 
-Engineering layer:
+## Evaluation layer
 - rollout capture
-- baseline scorer
-- world-model-derived judge scorer
-- evaluation layer
-- replay/demo layer
+- prefix builder
+- baseline scorers
+- judge scorers
+- benchmark outputs
+
+## Presentation layer
+- replay/demo artifact
+- score timeline
+- benchmark summary
