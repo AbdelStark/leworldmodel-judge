@@ -31,12 +31,14 @@ class PrefixRecord:
     prefix_failure_label: bool
     prefix_recoverability_label: str
     sparse_reward_prefix: float
+    policy_family: str | None = None
     progress_proxy: float | None = None
     target_distance_start: float | None = None
     target_distance_last: float | None = None
     target_distance_best: float | None = None
     distance_progress: float | None = None
     in_place_score: float | None = None
+    near_object_score: float | None = None
     grasp_signal_peak: float | None = None
     success_signal_peak: float | None = None
     reward_density: float | None = None

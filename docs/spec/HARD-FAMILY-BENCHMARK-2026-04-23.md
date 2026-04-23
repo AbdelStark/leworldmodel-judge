@@ -31,8 +31,9 @@ The synthetic families are the first place where we can *guarantee* controlled f
   - simple progress baseline
 
 ## Synthetic hard-family benchmark
-Artifact folder:
+Artifact folders:
 - `artifacts/hard-family-synthetic-benchmark-2026-04-23/`
+- `artifacts/hard-family-synthetic-benchmark-2026-04-23-v2/`
 
 Command shape:
 ```bash
@@ -45,30 +46,29 @@ python scripts/collect_rollouts.py \
 ```
 
 Summary highlights:
-- total prefixes: `72`
-- failure-labeled prefixes: `4`
-- judge pairwise accuracy: `0.897059`
+- v1 judge pairwise accuracy: `0.897059`
+- v1 judge false positive rate: `0.294118`
+- v2 calibrated judge threshold: `0.360053`
+- v2 judge pairwise accuracy: `0.985294`
+- v2 judge false positive rate: `0.029412`
 - sparse-success-absence pairwise accuracy: `0.5`
 - simple progress pairwise accuracy: `0.147059`
-- judge false positive rate: `0.294118`
-- sparse-success-absence false positive rate: `1.0`
-- simple progress false positive rate: `0.176471`
+- family-aware report: `report/family-report.md` + `report/family-report.png`
 
 ## Honest read on synthetic benchmark
-This is the first benchmark slice where the three signals *actually diverge*:
-- the sparse-success baseline is maximally blunt
-- the simple progress baseline ranks these hard families badly
-- the composite judge separates doomed-vs-slow-success much better
+The synthetic benchmark is now a much cleaner proof surface:
+- the sparse-success baseline is still maximally blunt
+- the simple progress baseline still ranks these hard families badly
+- the composite judge now keeps the separation advantage *and* has a much better operating point after in-slice calibration
 
 But:
-- judge false positives are still too high
-- failure coverage is still small because the current labeler only marks a narrow subset as doomed
-
-So the synthetic benchmark now proves the *shape* of the claim, not the final quality bar.
+- coverage is still narrow because the current labeler only marks a small subset as doomed
+- the calibration story is still in-slice, so it is useful for debugging but not yet a publishable held-out operating point
 
 ## Real hard-family smoke
-Artifact folder:
+Artifact folders:
 - `artifacts/hard-family-real-smoke-2026-04-23/`
+- `artifacts/hard-family-real-smoke-2026-04-23-v2/`
 
 Command shape:
 ```bash
@@ -82,24 +82,28 @@ python scripts/collect_rollouts.py \
 ```
 
 Summary highlights:
-- total prefixes: `36`
-- failure-labeled prefixes: `9`
-- judge pairwise accuracy: `0.872428`
-- sparse-success-absence pairwise accuracy: `0.5`
-- simple progress pairwise accuracy: `0.68107`
-- judge false positive rate: `0.888889`
+- v1 judge pairwise accuracy: `0.872428`
+- v1 judge false positive rate: `0.888889`
+- v2 calibrated judge threshold: `0.384724`
+- v2 judge pairwise accuracy: `0.959866`
+- v2 judge false positive rate: `0.043478`
+- v2 judge failure hit rate: `0.923077`
+- pick-place-v3 failure-label coverage: `0.333333`
+- family-aware report: `report/family-report.md` + `report/family-report.png`
 
 ## Honest read on real hard-family smoke
-Real harder-than-random trajectories now exist.
-That matters.
+Real harder-than-random trajectories still matter, but the benchmark surface is now materially better:
+- false positives dropped sharply once the judge became more patient on early engaged prefixes and the summary switched to a calibrated operating point
+- `pick-place-v3` is no longer a blind spot; late grasp-without-transport prefixes now become labeled failures instead of disappearing into `at_risk`
+- family-aware markdown + plots now make it obvious where the judge wins and where it still misses
 
-But this run is still not clean enough to claim victory because:
-- false positives are extremely high
-- task coverage is uneven (`pick-place-v3` still has no failure-labeled prefixes)
-- the judge is better at ranking than the simple baselines, but not yet usable as a calibrated detector
+But this is still not final because:
+- the calibration is still in-slice rather than held-out
+- `push-v3` remains the weak task and currently loses one labeled failure at the chosen threshold
+- the failure labeler is still narrow and mostly catches late doomed cases rather than a richer recoverability spectrum
 
 ## Next moves
-1. reduce judge false positives on non-failure prefixes
-2. improve task-aware label coverage, especially for `pick-place-v3`
-3. add family-aware plots / tables instead of one aggregate JSON only
-4. search for a better thresholded operating point instead of fixing everything at `0.5`
+1. harden push-v3 so the calibrated judge does not miss the one labeled failure in the current real smoke
+2. split in-slice calibration from held-out calibration so the threshold story is scientifically cleaner
+3. widen failure labeling beyond narrow late-prefix doomed cases
+4. add score-over-time replay plots on top of the family summary figure

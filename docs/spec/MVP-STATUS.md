@@ -14,7 +14,7 @@
 - Judge v1 upgraded from a pure placeholder heuristic to a label-free composite prefix judge with explicit raw sub-scores
 
 ## Current phase
-**Hard-family benchmark shaping + metric divergence work**
+**Calibration + task-aware failure coverage + family-aware reporting**
 
 ## Current milestone target
 Ship an honest benchmark surface with both artifact types:
@@ -42,8 +42,9 @@ Current summary (`summary.json`):
 - progress-proxy failure hits: 11/11
 
 ### Hard-family synthetic benchmark
-Artifact folder:
+Artifact folders:
 - `artifacts/hard-family-synthetic-benchmark-2026-04-23/`
+- `artifacts/hard-family-synthetic-benchmark-2026-04-23-v2/`
 
 Run shape:
 - source: synthetic hard families
@@ -53,14 +54,19 @@ Run shape:
 - total prefixes: 72
 
 Current summary (`summary.json`):
-- judge pairwise accuracy: `0.897059`
+- v1 judge pairwise accuracy: `0.897059`
+- v1 judge false positive rate: `0.294118`
+- v2 calibrated judge threshold: `0.360053`
+- v2 judge pairwise accuracy: `0.985294`
+- v2 judge false positive rate: `0.029412`
 - sparse-success-absence pairwise accuracy: `0.5`
 - simple progress pairwise accuracy: `0.147059`
-- judge false positive rate: `0.294118`
+- family-aware report saved under `report/family-report.md` and `report/family-report.png`
 
 ### Hard-family real smoke
-Artifact folder:
+Artifact folders:
 - `artifacts/hard-family-real-smoke-2026-04-23/`
+- `artifacts/hard-family-real-smoke-2026-04-23-v2/`
 
 Run shape:
 - source: real Meta-World hard families
@@ -71,22 +77,26 @@ Run shape:
 - total prefixes: 36
 
 Current summary (`summary.json`):
-- judge pairwise accuracy: `0.872428`
-- sparse-success-absence pairwise accuracy: `0.5`
-- simple progress pairwise accuracy: `0.68107`
-- judge false positive rate: `0.888889`
+- v1 judge pairwise accuracy: `0.872428`
+- v1 judge false positive rate: `0.888889`
+- v2 calibrated judge threshold: `0.384724`
+- v2 judge pairwise accuracy: `0.959866`
+- v2 judge false positive rate: `0.043478`
+- v2 judge failure hit rate: `0.923077`
+- pick-place-v3 failure-label coverage improved from `0.0` to `0.333333`
+- family-aware report saved under `report/family-report.md` and `report/family-report.png`
 
 Interpretation:
 - the pipeline is now using a true sparse-success baseline rather than the dense shaping reward sum
-- the synthetic hard-family benchmark is the first artifact where judge / sparse / progress genuinely diverge
-- the real hard-family smoke proves harder-than-random trajectories exist in Meta-World collection now
-- but real false positives are still far too high, so this is a promising benchmark shape, not a solved detector
+- the synthetic hard-family benchmark is now a much cleaner proof surface: calibrated judge false positives dropped from `0.294118` to `0.029412` while preserving full hit rate on the narrow labeled failures
+- the real hard-family smoke now has family-aware reports, in-slice calibration, and far better task-aware coverage; `pick-place-v3` moved from zero failure labels to late-prefix doomed labels with `0.333333` coverage
+- the real benchmark is still not solved: push-v3 remains brittle and the calibrated judge gives up one hit (`12/13`) to buy a large false-positive reduction
 
 ## Next milestone
-1. reduce judge false positives on hard-family synthetic and real runs
-2. add family-aware tables / plots instead of aggregate JSON only
-3. improve task-aware label coverage, especially for `pick-place-v3`
-4. search for better thresholding / calibration instead of locking everything to `0.5`
+1. harden push-v3 so the calibrated judge does not miss the single labeled failure
+2. separate in-slice calibration from future held-out calibration so the threshold story is publishable, not just convenient
+3. widen failure-label coverage beyond the narrow late-prefix doomed cases
+4. add score-over-time replay visuals on top of the family-aware summary plots
 
 ## V1 exit criteria
 - rollout capture works

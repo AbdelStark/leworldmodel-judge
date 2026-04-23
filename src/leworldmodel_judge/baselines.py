@@ -8,6 +8,7 @@ def score_prefix(prefix: dict) -> dict:
     return {
         'episode_id': prefix['episode_id'],
         'task_id': prefix['task_id'],
+        'policy_family': prefix.get('policy_family'),
         'prefix_fraction': prefix['prefix_fraction'],
         'sparse_reward_score': sparse_reward,
         'terminal_success_score': final_success,
