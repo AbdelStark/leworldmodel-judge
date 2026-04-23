@@ -6,9 +6,9 @@
 **Meta-World**
 
 ### Locked v1 tasks
-- `reach-v2`
-- `push-v2`
-- `pick-place-v2`
+- `reach-v3`
+- `push-v3`
+- `pick-place-v3`
 
 ## Main task
 Given a **partial manipulation rollout prefix**, predict one or more of:

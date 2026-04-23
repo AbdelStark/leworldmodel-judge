@@ -44,9 +44,9 @@ The benchmark can begin with vector-style observations.
 
 ## Task stance
 The exact v1 benchmark slice is:
-- `reach-v2`
-- `push-v2`
-- `pick-place-v2`
+- `reach-v3`
+- `push-v3`
+- `pick-place-v3`
 
 ## Synthetic fallback
 Because Meta-World may not be installed in every environment, the data layer must support a **synthetic fixture mode** that emits schema-valid toy rollouts for testing scripts and CI.

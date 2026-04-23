@@ -3,7 +3,7 @@
 ## Phase 1 — environment and contract lock
 Deliverables:
 - exact environment choice = Meta-World
-- exact task IDs = `reach-v2`, `push-v2`, `pick-place-v2`
+- exact task IDs = `reach-v3`, `push-v3`, `pick-place-v3`
 - exact prefix cutoffs = 25/50/75%
 - exact labels = final success, prefix failure, recoverability
 - exact metrics = early failure detection, ranking quality, optional calibration

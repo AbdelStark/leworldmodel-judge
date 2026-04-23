@@ -8,7 +8,7 @@ def test_prefix_pipeline_smoke():
     for t in range(4):
         steps.append({
             'episode_id': 'ep1',
-            'task_id': 'reach-v2',
+            'task_id': 'reach-v3',
             'timestep': t,
             'episode_horizon': 4,
             'observation': [1.0 - t * 0.2, 0.0],
@@ -21,5 +21,5 @@ def test_prefix_pipeline_smoke():
     assert len(prefixes) == 1
     baseline = score_prefix(prefixes[0].to_dict())
     judge = heuristic_surprise_score(prefixes[0].to_dict())
-    assert baseline['task_id'] == 'reach-v2'
+    assert baseline['task_id'] == 'reach-v3'
     assert 'failure_score' in judge

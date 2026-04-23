@@ -5,16 +5,22 @@
 - Docs/spec package seeded
 - Core specs expanded
 - RFCs expanded
-- No implementation yet
+- Baseline scaffold created
+- Synthetic-mode pipeline runs end-to-end
+- Meta-World environment installed in local venv
+- Real `reach-v3` smoke pass completed end-to-end
 
 ## Current phase
-**Spec-first incubation**
+**Spec + early scaffold**
 
 ## Current milestone target
-Finish the full pre-coding package so implementation can start without architectural drift.
+Expand from one real-task smoke pass into the full locked v1 benchmark slice:
+- `reach-v3`
+- `push-v3`
+- `pick-place-v3`
 
 ## Next milestone
-Lock the exact environment / task / labels / baselines in the contracts, then scaffold the data and evaluation layer.
+Replace single-task smoke validation with a repeatable multi-task rollout/evaluation pass and tighten label heuristics.
 
 ## V1 exit criteria
 - rollout capture works
