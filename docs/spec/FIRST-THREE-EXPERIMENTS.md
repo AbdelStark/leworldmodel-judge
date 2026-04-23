@@ -2,7 +2,7 @@
 
 ## Experiment 1 — baseline-only benchmark pass
 Goal:
-- collect or synthesize rollouts for `reach-v2`, `push-v2`, `pick-place-v2`
+- collect or synthesize rollouts for `reach-v3`, `push-v3`, `pick-place-v3`
 - build prefixes at 25/50/75%
 - compute sparse reward and terminal-success views
 - prove what those signals miss on partial prefixes

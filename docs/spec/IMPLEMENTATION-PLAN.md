@@ -14,6 +14,8 @@ Deliverables:
 - canonical schema
 - prefix builder
 - synthetic fixture mode for script testing
+- multi-task task resolution across the locked v1 slice
+- Meta-World info capture for prefix-level derived signals
 
 ## Phase 3 — baselines
 Deliverables:
@@ -26,6 +28,7 @@ Deliverables:
 - one world-model-derived score
 - saved score outputs
 - uncertainty score if feasible
+- explicit raw sub-scores for progress / distance / in-place / grasp / stall evidence
 
 ## Phase 5 — evaluation surface
 Deliverables:

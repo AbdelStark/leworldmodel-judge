@@ -20,15 +20,15 @@ Given a **partial manipulation rollout prefix**, predict one or more of:
 
 ## Why these tasks
 
-### reach-v2
+### reach-v3
 - simplest contact-light manipulation task
 - good for debugging prefix scoring and progress proxies
 
-### push-v2
+### push-v3
 - introduces longer-horizon object interaction and recoverability failure
 - useful for showing that sparse reward often reveals failure too late
 
-### pick-place-v2
+### pick-place-v3
 - richest of the v1 trio
 - strongest visual demo surface
 - most likely to expose partial progress vs eventual failure mismatch
