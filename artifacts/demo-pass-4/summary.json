@@ -1,0 +1,110 @@
+{
+  "thresholds": {
+    "judge_failure_threshold": 0.360053,
+    "progress_failure_threshold": 0.2
+  },
+  "calibration": {
+    "judge": {
+      "recommended_threshold": 0.360053,
+      "hit_rate": 1.0,
+      "false_positive_rate": 0.0,
+      "balanced_accuracy": 1.0,
+      "mode": "in_slice_balanced_accuracy"
+    },
+    "progress": {
+      "recommended_threshold": 0.8,
+      "hit_rate": null,
+      "false_positive_rate": null,
+      "balanced_accuracy": null,
+      "mode": "fixed_progress_baseline"
+    }
+  },
+  "overall": {
+    "count": 12,
+    "failure_labels": 2,
+    "non_failure_labels": 10,
+    "judge_failure_hits": 2,
+    "judge_false_positives": 0,
+    "baseline_sparse_absence_hits": 2,
+    "baseline_sparse_absence_false_positives": 10,
+    "baseline_progress_hits": 0,
+    "baseline_progress_false_positives": 2,
+    "judge_failure_hit_rate": 1.0,
+    "judge_false_positive_rate": 0.0,
+    "baseline_sparse_absence_hit_rate": 1.0,
+    "baseline_sparse_absence_false_positive_rate": 1.0,
+    "baseline_progress_hit_rate": 0.0,
+    "baseline_progress_false_positive_rate": 0.2,
+    "failure_label_coverage": 0.166667,
+    "judge_pairwise_accuracy": 1.0,
+    "baseline_sparse_absence_pairwise_accuracy": 0.5,
+    "baseline_progress_pairwise_accuracy": 0.1
+  },
+  "tasks": {
+    "push-v3": {
+      "count": 12,
+      "failure_labels": 2,
+      "non_failure_labels": 10,
+      "judge_failure_hits": 2,
+      "judge_false_positives": 0,
+      "baseline_sparse_absence_hits": 2,
+      "baseline_sparse_absence_false_positives": 10,
+      "baseline_progress_hits": 0,
+      "baseline_progress_false_positives": 2,
+      "judge_failure_hit_rate": 1.0,
+      "judge_false_positive_rate": 0.0,
+      "baseline_sparse_absence_hit_rate": 1.0,
+      "baseline_sparse_absence_false_positive_rate": 1.0,
+      "baseline_progress_hit_rate": 0.0,
+      "baseline_progress_false_positive_rate": 0.2,
+      "failure_label_coverage": 0.166667,
+      "judge_pairwise_accuracy": 1.0,
+      "baseline_sparse_absence_pairwise_accuracy": 0.5,
+      "baseline_progress_pairwise_accuracy": 0.1
+    }
+  },
+  "families": {
+    "weak": {
+      "count": 6,
+      "failure_labels": 0,
+      "non_failure_labels": 6,
+      "judge_failure_hits": 0,
+      "judge_false_positives": 0,
+      "baseline_sparse_absence_hits": 0,
+      "baseline_sparse_absence_false_positives": 6,
+      "baseline_progress_hits": 0,
+      "baseline_progress_false_positives": 2,
+      "judge_failure_hit_rate": 0.0,
+      "judge_false_positive_rate": 0.0,
+      "baseline_sparse_absence_hit_rate": 0.0,
+      "baseline_sparse_absence_false_positive_rate": 1.0,
+      "baseline_progress_hit_rate": 0.0,
+      "baseline_progress_false_positive_rate": 0.333333,
+      "failure_label_coverage": 0.0,
+      "judge_pairwise_accuracy": null,
+      "baseline_sparse_absence_pairwise_accuracy": null,
+      "baseline_progress_pairwise_accuracy": null
+    },
+    "doomed": {
+      "count": 6,
+      "failure_labels": 2,
+      "non_failure_labels": 4,
+      "judge_failure_hits": 2,
+      "judge_false_positives": 0,
+      "baseline_sparse_absence_hits": 2,
+      "baseline_sparse_absence_false_positives": 4,
+      "baseline_progress_hits": 0,
+      "baseline_progress_false_positives": 0,
+      "judge_failure_hit_rate": 1.0,
+      "judge_false_positive_rate": 0.0,
+      "baseline_sparse_absence_hit_rate": 1.0,
+      "baseline_sparse_absence_false_positive_rate": 1.0,
+      "baseline_progress_hit_rate": 0.0,
+      "baseline_progress_false_positive_rate": 0.0,
+      "failure_label_coverage": 0.333333,
+      "judge_pairwise_accuracy": 1.0,
+      "baseline_sparse_absence_pairwise_accuracy": 0.5,
+      "baseline_progress_pairwise_accuracy": 0.25
+    }
+  }
+}

@@ -50,8 +50,14 @@ Purpose: create replay/demo artifacts.
 
 Expected args:
 - `--prefixes PATH`
+- `--baselines PATH`
 - `--judge PATH`
 - `--output PATH`
+
+Outputs:
+- markdown replay/demo artifact at `--output`
+- sibling comparison CSV with joined prefix/baseline/judge rows
+- sibling timeline PNG with prefix-level score movement
 
 ## Rule
 If the project starts as scripts, keep names and arguments close enough to this contract that a later CLI wrapper is trivial.
