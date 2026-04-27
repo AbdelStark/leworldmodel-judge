@@ -32,6 +32,7 @@ Someone who may later extend the prototype into:
 - offline RL data filtering
 - process reward modeling
 - trajectory triage for embodied agents
+- more faithful JEPA-native judging paths
 
 ## User problem
 Sparse reward and terminal success labels often fail to say enough about partial trajectories.
@@ -40,9 +41,10 @@ Users want earlier answers to questions like:
 - has it already become unrecoverable?
 - does the state evolution look physically off-manifold?
 - how uncertain should we be about any of those judgments?
+- can the reward-like signal be inspected rather than blindly trusted?
 
 ## Product promise
-Given a partial rollout prefix, the system will output a structured judgment signal and benchmark it against sparse reward and simple baselines.
+Given a partial rollout prefix, the system will output a structured judgment signal, preserve raw evidence fields behind that signal, and benchmark it against sparse reward and simple baselines.
 
 ## V1 scope
 ### Included
@@ -53,6 +55,8 @@ Given a partial rollout prefix, the system will output a structured judgment sig
 - one world-model-derived judging path
 - one benchmark output table
 - one plot / replay demo artifact
+- structured score decomposition for each judged prefix
+- threshold provenance in summary outputs
 
 ### Explicitly excluded
 - multi-environment generalization claims
@@ -61,18 +65,21 @@ Given a partial rollout prefix, the system will output a structured judgment sig
 - replacing environment reward universally
 - broad sim-to-real claims
 - agent training loop integration as a required part of v1
+- cryptographic proof that the reward is "correct"
 
 ## Core v1 success criteria
 The repo is successful if it produces a benchmark result showing at least one of the following:
 1. earlier failure detection than sparse reward alone
 2. better ranking of partial trajectories than sparse reward alone
 3. a useful implausibility / uncertainty signal that exposes cases sparse reward misses
+4. a replay-inspectable, decomposed judging surface that makes the score easier to challenge and audit than a raw scalar baseline
 
 ## Acceptable weaker success mode
 Even if the judge does not beat sparse reward cleanly, the repo is still valuable if it honestly reveals:
 - where the judge fails
 - what kinds of trajectories confuse it
 - why plausibility and success diverge
+- why a more faithful JEPA-native model pass is still needed
 
 ## Failure criteria
 The project fails if:
@@ -81,12 +88,14 @@ The project fails if:
 - it cannot outperform or meaningfully complement trivial baselines
 - it overclaims LeWorldModel faithfulness without evidence
 - the demo looks polished but the evaluation story is weak
+- the reward/judge story is not inspectable enough to debug record-by-record
 
 ## Why this product matters
-This product is interesting because it connects three active threads:
+This product is interesting because it connects four active threads:
 - world models and JEPAs
 - process-level judging / verifier logic
 - embodied RL trajectory evaluation
+- verifiable-reward-style auditability for reward signals
 
 The point is not novelty theater.
-The point is to create an artifact that is narrow enough to be benchmarked and sharp enough to communicate technical taste.
+The point is to create an artifact that is narrow enough to be benchmarked, sharp enough to communicate technical taste, and honest enough to show exactly what is real today versus deferred to the next model pass.

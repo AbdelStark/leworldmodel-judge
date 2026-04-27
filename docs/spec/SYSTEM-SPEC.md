@@ -73,6 +73,7 @@ Responsibilities:
 - compare judge signals against baselines
 - compute ranking and early-detection metrics
 - emit reproducible result files
+- preserve threshold provenance and family-aware slices
 
 ### 6. Demo / replay layer
 Responsibilities:
@@ -112,6 +113,8 @@ Each prefix should contain:
 ### Demo outputs
 - replay snippets
 - score timeline plots
+- baseline-vs-judge disagreement views
+- raw evidence decomposition views
 - optional static HTML or notebook-style artifact
 
 ## Key invariants

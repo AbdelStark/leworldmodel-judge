@@ -75,6 +75,8 @@ For the first pass, this may be derived using simple task heuristics documented 
 - early failure detection accuracy
 - AUROC / AUPRC for doomed vs recoverable prefixes
 - partial-trajectory ranking quality (Spearman / Kendall / pairwise accuracy)
+- false positive rate at the chosen failure threshold
+- threshold provenance (fixed, in-slice, or held-out)
 - calibration notes if uncertainty is emitted
 
 ## Benchmark questions
@@ -84,3 +86,6 @@ For the first pass, this may be derived using simple task heuristics documented 
 
 ## V1 rule
 The judge must be compared against sparse reward. No judge-only victory lap.
+
+## Current honesty rule
+Until held-out calibration exists, any threshold chosen from the same benchmark slice must be labeled as **in-slice debugging calibration**, not as a final deployment-quality operating point.

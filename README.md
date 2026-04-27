@@ -1,6 +1,6 @@
 # LeWorldModel Judge
 
-A JEPA-style world-model-derived trajectory judge for embodied reinforcement learning.
+A JEPA-anchored embodied RL showcase for **prefix-level trajectory verification** and **verifiable-reward-style judging**.
 
 ## Core thesis
 
@@ -10,7 +10,7 @@ The project is intentionally narrow.
 It is **not** trying to build a universal reward model for all RL.
 It is trying to answer one practical question:
 
-> can a world-model-derived judging signal add useful information over sparse reward alone in manipulation rollouts?
+> can a world-model-derived, audit-friendly judging signal add useful information over sparse reward alone in manipulation rollouts?
 
 ## Why this exists
 
@@ -37,33 +37,85 @@ This repo is anchored on **LeWorldModel** as the conceptual JEPA family because 
 - AMI-style world-model / physical reasoning alignment
 
 Important honesty rule:
-- v1 does **not** require a heavyweight faithful reproduction of LeWorldModel
-- v1 only needs a judging artifact whose signals are honestly **world-model-derived** and consistent with the LeWorldModel thesis
-- stronger architectural faithfulness belongs in later phases if the first artifact proves the benchmark story is real
+- v1 does **not** claim a heavyweight faithful reproduction of LeWorldModel
+- v1 currently ships a lighter **composite prefix judge** with explicit raw sub-scores and calibration artifacts
+- stronger architectural faithfulness belongs in later phases if the benchmark and replay surface prove the story is real
 
-## v1 product shape
+## Verifiable rewards angle
 
-V1 is intentionally small:
-- one manipulation environment family
-- one rollout-prefix judging task
-- one benchmark table
-- one replay/demo surface
-- one world-model-derived judge implementation
-- one sparse-reward baseline and one heuristic baseline
+This repo uses **verifiable rewards** in the practical showcase sense, not the cryptographic-marketing sense.
 
-## Recommended environment
+What that means here:
+- the judge output is file-based and replay-inspectable
+- each scored prefix carries decomposed evidence fields, not just one magic scalar
+- benchmark summaries preserve threshold provenance and family slices
+- another reviewer should be able to challenge a score by looking at the rollout, the prefix record, and the raw sub-scores
 
-Default recommendation:
-- **Meta-World** first
+What it does **not** mean yet:
+- cryptographic proof of reward correctness
+- a production-safe online RL reward function
+- a universal verifier for all embodied tasks
 
-Fallback / alternative:
-- **robosuite** if the setup cost remains manageable and the visual surface is materially better
+## Main claim this repo is trying to earn
 
-## Main claim this repo should try to earn
+> A world-model-derived trajectory judge can detect doomed manipulation trajectories earlier, or rank partial rollouts better, than sparse reward alone — while producing more inspectable process-reward-style evidence than a raw scalar baseline.
 
-> A world-model-derived trajectory judge can detect doomed manipulation trajectories earlier, or rank partial rollouts better, than sparse reward alone.
+That is the exact claim the benchmark should live or die on.
 
-This is the exact claim the benchmark should live or die on.
+## V1 benchmark slice
+
+### Environment family
+- **Meta-World**
+
+### Locked tasks
+- `reach-v3`
+- `push-v3`
+- `pick-place-v3`
+
+### Prefix cutoffs
+- `0.25`
+- `0.50`
+- `0.75`
+
+### Policy families used to stress the benchmark
+- `expert`
+- `weak`
+- `doomed`
+- `misleading`
+- `random`
+
+## Current system shape
+
+The current repo already contains a working end-to-end benchmark path:
+- rollout capture and normalization
+- prefix building with Meta-World-derived signals
+- baseline scorers
+- a composite prefix judge
+- summary metrics with threshold recommendation
+- family-aware markdown and plot reports
+- synthetic hard-family benchmark artifacts
+- real Meta-World smoke artifacts
+
+Current judge output includes:
+- `on_track_score`
+- `failure_score`
+- `implausibility_score`
+- `uncertainty_score`
+- decomposed evidence fields like progress, distance progress, in-place, near-object, grasp, reward, and stall evidence
+
+## Current honest read
+
+What is already real:
+- the pipeline runs end-to-end
+- the hard-family synthetic slice gives clean separation between judge and weak baselines
+- the real hard-family smoke now has materially better false-positive behavior after calibration
+- family-aware reports make it obvious where the judge wins and where it still misses
+
+What is still not solved:
+- the current judge is still a lighter heuristic/composite proxy, not a faithful JEPA-native latent verifier
+- threshold calibration is still **in-slice**, which is acceptable for debugging but not the final publishable standard
+- failure labels are still narrower than the full recoverability story we eventually want
+- `push-v3` remains the main weak task in the real slice
 
 ## Non-goals
 
@@ -72,6 +124,15 @@ This is the exact claim the benchmark should live or die on.
 - broad claims across all RL domains
 - pretending a plausibility score is automatically a valid reward function
 - claiming that LeWorldModel-style surprise alone is a sufficient control signal
+- hiding heuristic components behind JEPA branding
+
+## Immediate next moves
+
+1. harden `push-v3` so the calibrated judge stops missing the single labeled failure in the real hard-family slice
+2. separate in-slice calibration from held-out calibration so the threshold story becomes publishable
+3. widen failure and recoverability labeling beyond narrow late-prefix doomed cases
+4. add score-over-time replay visuals with baseline disagreement and raw evidence decomposition
+5. only then push toward a more faithful JEPA-native judge implementation
 
 ## Repo map
 
@@ -87,22 +148,16 @@ This is the exact claim the benchmark should live or die on.
 - `docs/spec/RESULT-SCHEMA-CONTRACT.md` — benchmark output contract
 - `docs/spec/CLI-COMMAND-SPEC.md` — script/CLI surface to keep implementation honest
 - `docs/spec/FIRST-THREE-EXPERIMENTS.md` — pre-coding experiment pack
-- `docs/spec/DEEPENING-PASS-1.md` — first tightening pass
-- `docs/spec/DEEPENING-PASS-2.md` — second tightening pass
-- `docs/spec/DEEPENING-PASS-3.md` — third tightening pass
+- `docs/spec/DEEPENING-PASS-1.md` — thesis tightening pass
+- `docs/spec/DEEPENING-PASS-2.md` — benchmark tightening pass
+- `docs/spec/DEEPENING-PASS-3.md` — showcase tightening pass
 - `docs/spec/IMPLEMENTATION-PLAN.md` — exact build order, file plan, and verification path
 - `docs/rfcs/` — design decisions and v1/v2 boundaries
 
 ## Build order
 
-1. lock the problem and evaluation contracts
-2. lock environment and task boundaries
-3. implement rollout capture and baselines
-4. implement one judge signal
-5. generate benchmark outputs
-6. generate replay/demo outputs
-7. only then consider broader LeWorldModel faithfulness or extension work
-
-## Current status
-
-Private incubation repo. Docs-first. No implementation claims yet.
+1. keep the problem and evaluation contracts stable
+2. harden the benchmark slice and labels
+3. strengthen held-out calibration and task-specific failure coverage
+4. improve replay/demo legibility
+5. only then invest in broader LeWorldModel faithfulness or extension work
