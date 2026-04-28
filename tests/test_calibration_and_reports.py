@@ -139,6 +139,8 @@ def test_summary_reports_calibrated_thresholds_and_family_slices(tmp_path):
     report_text = Path(outputs["markdown"]).read_text()
     assert "Threshold provenance" in report_text
     assert "in-slice tuning" in report_text
+    assert "family overlap" in report_text
+    assert "non-failure labels" in report_text
 
 
 def test_render_demo_emits_markdown_csv_and_timeline_plot(tmp_path):

@@ -73,11 +73,22 @@ For the first pass, this may be derived using simple task heuristics documented 
 
 ## Primary metrics
 - early failure detection accuracy
-- AUROC / AUPRC for doomed vs recoverable prefixes
-- partial-trajectory ranking quality (Spearman / Kendall / pairwise accuracy)
+- AUROC / pairwise ranking accuracy for doomed vs recoverable prefixes
+- average precision for failure detection under sparse positives
 - false positive rate at the chosen failure threshold
 - threshold provenance (fixed, in-slice, or held-out)
 - calibration notes if uncertainty is emitted
+
+## Calibration provenance rule
+Evaluation artifacts must distinguish three cases explicitly:
+- **fixed**: threshold chosen before looking at the current slice
+- **in-slice**: threshold tuned on the same slice being reported
+- **held-out**: threshold tuned on a disjoint calibration slice and then evaluated on the reported slice
+
+For held-out runs, the artifact must name:
+- which policy families calibrated the threshold
+- which policy families were actually evaluated
+- how many failure and non-failure prefixes each cohort contained
 
 ## Benchmark questions
 1. Can the judge detect doomed trajectories earlier than sparse reward alone?

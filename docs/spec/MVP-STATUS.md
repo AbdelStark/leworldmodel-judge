@@ -12,9 +12,10 @@
 - Multi-task real rollout pass now works across the full locked v1 slice
 - Prefix records now carry Meta-World-derived signals (`obj_to_target`, `in_place_reward`, `grasp`, `success`, `unscaled_reward`)
 - Judge v1 upgraded from a pure placeholder heuristic to a label-free composite prefix judge with explicit raw sub-scores
+- Evaluator now supports held-out family calibration provenance and average-precision reporting
 
 ## Current phase
-**Calibration + task-aware failure coverage + family-aware reporting**
+**Held-out calibration hardening + task-aware failure coverage + family-aware reporting**
 
 ## Current milestone target
 Ship an honest benchmark surface with both artifact types:
@@ -90,11 +91,12 @@ Interpretation:
 - the pipeline is now using a true sparse-success baseline rather than the dense shaping reward sum
 - the synthetic hard-family benchmark is now a much cleaner proof surface: calibrated judge false positives dropped from `0.294118` to `0.029412` while preserving full hit rate on the narrow labeled failures
 - the real hard-family smoke now has family-aware reports, in-slice calibration, and far better task-aware coverage; `pick-place-v3` moved from zero failure labels to late-prefix doomed labels with `0.333333` coverage
+- the code path now supports held-out family calibration provenance and average-precision reporting, but the checked-in benchmark artifacts still need a true held-out rerun before the threshold story is publishable
 - the real benchmark is still not solved: push-v3 remains brittle and the calibrated judge gives up one hit (`12/13`) to buy a large false-positive reduction
 
 ## Next milestone
-1. harden push-v3 so the calibrated judge does not miss the single labeled failure
-2. separate in-slice calibration from future held-out calibration so the threshold story is publishable, not just convenient
+1. run a true held-out family calibration pass and save those artifacts separately from the in-slice debug runs
+2. harden push-v3 so the calibrated judge does not miss the single labeled failure
 3. widen failure-label coverage beyond the narrow late-prefix doomed cases
 4. add score-over-time replay visuals on top of the family-aware summary plots
 

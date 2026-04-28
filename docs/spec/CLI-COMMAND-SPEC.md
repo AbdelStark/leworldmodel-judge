@@ -44,6 +44,13 @@ Expected args:
 - `--baselines PATH`
 - `--judge PATH`
 - `--output PATH`
+- optional `--calibration-families weak,doomed`
+- optional `--evaluation-families misleading,adversarial`
+
+Evaluation obligation:
+- summary output must preserve threshold provenance
+- `held_out_family_split` is only valid when calibration families and evaluation families are disjoint
+- if the families overlap, the output must fall back to in-slice semantics instead of pretending the threshold is held-out
 
 ### render-demo
 Purpose: create replay/demo artifacts.

@@ -93,6 +93,7 @@ The current repo already contains a working end-to-end benchmark path:
 - baseline scorers
 - a composite prefix judge plus a hybrid latent-augmented judge
 - summary metrics with threshold recommendation
+- held-out-family calibration provenance support in the evaluator
 - family-aware markdown and plot reports
 - synthetic hard-family benchmark artifacts
 - real Meta-World smoke artifacts
@@ -108,6 +109,7 @@ uv run ruff check .
 uv run python scripts/build_prefixes.py --input artifacts/.../rollouts.jsonl --output artifacts/.../prefixes.jsonl
 uv run python scripts/build_latent_cache.py --rollouts artifacts/.../rollouts.jsonl --prefixes artifacts/.../prefixes.jsonl --output artifacts/.../latent-cache.jsonl
 uv run python scripts/run_judge.py --input artifacts/.../prefixes.jsonl --latent-cache artifacts/.../latent-cache.jsonl --mode hybrid_surprise --output artifacts/.../judge-hybrid.jsonl
+uv run python scripts/evaluate.py --prefixes artifacts/.../prefixes.jsonl --baselines artifacts/.../baselines.jsonl --judge artifacts/.../judge-hybrid.jsonl --output artifacts/.../summary.json --calibration-families weak,doomed --evaluation-families misleading,adversarial
 uv run python scripts/render_demo.py --prefixes artifacts/.../prefixes.jsonl --baselines artifacts/.../baselines.jsonl --judge artifacts/.../judge-hybrid.jsonl --output artifacts/.../demo-artifact.md
 ```
 
@@ -127,10 +129,11 @@ What is already real:
 - the hard-family synthetic slice gives clean separation between judge and weak baselines
 - the real hard-family smoke now has materially better false-positive behavior after calibration
 - family-aware reports make it obvious where the judge wins and where it still misses
+- the evaluator now records calibration provenance, held-out family splits, and average-precision views instead of pretending every threshold is the same kind of evidence
 
 What is still not solved:
 - the current judge is still a lighter heuristic/composite proxy, not a faithful JEPA-native latent verifier
-- threshold calibration is still **in-slice**, which is acceptable for debugging but not the final publishable standard
+- the checked-in artifacts still mostly rely on **in-slice** threshold selection even though the code path now supports held-out family calibration
 - failure labels are still narrower than the full recoverability story we eventually want
 - `push-v3` remains the main weak task in the real slice
 
@@ -145,8 +148,8 @@ What is still not solved:
 
 ## Immediate next moves
 
-1. harden `push-v3` so the calibrated judge stops missing the single labeled failure in the real hard-family slice
-2. separate in-slice calibration from held-out calibration so the threshold story becomes publishable
+1. run a true held-out family calibration pass so the artifact set contains at least one non-in-slice threshold story
+2. harden `push-v3` so the calibrated judge stops missing the single labeled failure in the real hard-family slice
 3. widen failure and recoverability labeling beyond narrow late-prefix doomed cases
 4. add score-over-time replay visuals with baseline disagreement and raw evidence decomposition
 5. only then push toward a more faithful JEPA-native judge implementation
@@ -168,6 +171,7 @@ What is still not solved:
 - `docs/spec/DEEPENING-PASS-1.md` — thesis tightening pass
 - `docs/spec/DEEPENING-PASS-2.md` — benchmark tightening pass
 - `docs/spec/DEEPENING-PASS-3.md` — showcase tightening pass
+- `docs/spec/DEEPENING-PASS-4.md` — evaluation-honesty pass for held-out calibration provenance and benchmark reporting
 - `docs/spec/IMPLEMENTATION-PLAN.md` — exact build order, file plan, and verification path
 - `docs/rfcs/` — design decisions and v1/v2 boundaries
 

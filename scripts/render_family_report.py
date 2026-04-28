@@ -28,7 +28,8 @@ def _metric_row(name: str, payload: dict) -> str:
     return (
         f"| {name} | {payload['count']} | {payload['failure_labels']} | "
         f"{_fmt(payload.get('judge_failure_hit_rate'))} | {_fmt(payload.get('judge_false_positive_rate'))} | "
-        f"{_fmt(payload.get('judge_pairwise_accuracy'))} | {_fmt(payload.get('failure_label_coverage'))} |"
+        f"{_fmt(payload.get('judge_pairwise_accuracy'))} | {_fmt(payload.get('judge_average_precision'))} | "
+        f"{_fmt(payload.get('failure_label_coverage'))} |"
     )
 
 
@@ -84,6 +85,10 @@ def render_family_report(summary: dict, output_dir: str | Path) -> dict[str, str
     calibration = summary.get("calibration", {})
     judge_calibration = calibration.get("judge", {})
     progress_calibration = calibration.get("progress", {})
+    provenance = calibration.get("provenance", {})
+    calibration_cohort = judge_calibration.get("cohort_stats", {})
+    evaluation_stats = judge_calibration.get("evaluation_stats", {})
+    evaluation_cohort = judge_calibration.get("evaluation_cohort", {})
 
     lines = [
         "# Family-aware benchmark report",
@@ -92,27 +97,38 @@ def render_family_report(summary: dict, output_dir: str | Path) -> dict[str, str
         f"- chosen judge threshold: `{summary['thresholds']['judge_failure_threshold']}`",
         f"- fixed progress failure threshold: `{summary['thresholds']['progress_failure_threshold']}`",
         f"- judge threshold selection mode: `{judge_calibration.get('mode', 'unknown')}`",
-        f"- judge calibration balanced accuracy (same slice): `{judge_calibration.get('balanced_accuracy', 'n/a')}`",
-        f"- judge calibration hit rate (same slice): `{judge_calibration.get('hit_rate', 'n/a')}`",
-        f"- judge calibration false positive rate (same slice): `{judge_calibration.get('false_positive_rate', 'n/a')}`",
+        f"- calibration families: `{', '.join(provenance.get('calibration_families', ['all']))}`",
+        f"- evaluation families: `{', '.join(provenance.get('evaluation_families', ['all']))}`",
+        f"- calibration/evaluation family overlap: `{provenance.get('family_overlap', 'n/a')}`",
+        f"- calibration prefixes: `{provenance.get('calibration_count', 'n/a')}` with `{provenance.get('calibration_failure_labels', 'n/a')}` failure labels and `{provenance.get('calibration_non_failure_labels', 'n/a')}` non-failure labels",
+        f"- evaluation prefixes: `{provenance.get('evaluation_count', 'n/a')}` with `{provenance.get('evaluation_failure_labels', 'n/a')}` failure labels and `{provenance.get('evaluation_non_failure_labels', 'n/a')}` non-failure labels",
+        f"- judge calibration balanced accuracy: `{judge_calibration.get('balanced_accuracy', 'n/a')}`",
+        f"- judge calibration hit rate: `{judge_calibration.get('hit_rate', 'n/a')}`",
+        f"- judge calibration false positive rate: `{judge_calibration.get('false_positive_rate', 'n/a')}`",
+        f"- judge calibration average precision: `{calibration_cohort.get('average_precision', 'n/a')}`",
+        f"- judge evaluation balanced accuracy: `{evaluation_stats.get('balanced_accuracy', 'n/a')}`",
+        f"- judge evaluation hit rate: `{evaluation_stats.get('hit_rate', 'n/a')}`",
+        f"- judge evaluation false positive rate: `{evaluation_stats.get('false_positive_rate', 'n/a')}`",
+        f"- judge evaluation average precision: `{evaluation_cohort.get('average_precision', 'n/a')}`",
         f"- progress baseline mode: `{progress_calibration.get('mode', 'unknown')}`",
         "",
         "## Honesty note",
         "- if the threshold was chosen on the same benchmark slice, present it as in-slice tuning, not held-out calibration.",
+        "- if the threshold comes from a held-out family split, say exactly which families calibrated it and which families were scored with it.",
         "- if a family looks good only because coverage is tiny, the artifact should say that out loud.",
         "",
         "## Per-family table",
         "",
-        "| family | count | failure labels | judge hit rate | judge false positive rate | judge pairwise accuracy | failure coverage |",
-        "|---|---:|---:|---:|---:|---:|---:|",
+        "| family | count | failure labels | judge hit rate | judge false positive rate | judge pairwise accuracy | judge average precision | failure coverage |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for family, payload in sorted(families.items()):
         lines.append(_metric_row(family, payload))
     markdown_path.write_text("\n".join(lines) + "\n")
 
     family_names = sorted(families)
-    hit_rates = [families[name]["judge_failure_hit_rate"] for name in family_names]
-    false_positive_rates = [families[name]["judge_false_positive_rate"] for name in family_names]
+    hit_rates = [families[name]["judge_failure_hit_rate"] or 0.0 for name in family_names]
+    false_positive_rates = [families[name]["judge_false_positive_rate"] or 0.0 for name in family_names]
     pairwise = [families[name]["judge_pairwise_accuracy"] or 0.0 for name in family_names]
 
     if not MATPLOTLIB_AVAILABLE:
