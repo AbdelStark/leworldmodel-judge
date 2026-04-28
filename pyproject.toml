@@ -1,15 +1,38 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
 
 [project]
 name = "leworldmodel-judge"
 version = "0.1.0"
-description = "JEPA-style world-model-derived trajectory judge for manipulation RL"
+description = "JEPA-anchored prefix-level trajectory judge for manipulation RL"
 readme = "README.md"
-requires-python = ">=3.10"
-authors = [{name = "Abdel"}]
-dependencies = []
+requires-python = ">=3.11"
+authors = [{ name = "Abdel" }]
+dependencies = [
+  "matplotlib>=3.9,<4",
+]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/leworldmodel_judge"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3,<9",
+  "ruff>=0.11,<0.12",
+]
+benchmark = [
+  "metaworld==3.0.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]

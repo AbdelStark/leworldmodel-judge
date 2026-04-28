@@ -89,12 +89,29 @@ That is the exact claim the benchmark should live or die on.
 The current repo already contains a working end-to-end benchmark path:
 - rollout capture and normalization
 - prefix building with Meta-World-derived signals
+- latent-cache generation for prefix/future comparisons
 - baseline scorers
-- a composite prefix judge
+- a composite prefix judge plus a hybrid latent-augmented judge
 - summary metrics with threshold recommendation
 - family-aware markdown and plot reports
 - synthetic hard-family benchmark artifacts
 - real Meta-World smoke artifacts
+
+## Modern local workflow
+
+This repo now works as a modern `uv` project.
+
+```bash
+uv sync
+uv run pytest
+uv run ruff check .
+uv run python scripts/build_prefixes.py --input artifacts/.../rollouts.jsonl --output artifacts/.../prefixes.jsonl
+uv run python scripts/build_latent_cache.py --rollouts artifacts/.../rollouts.jsonl --prefixes artifacts/.../prefixes.jsonl --output artifacts/.../latent-cache.jsonl
+uv run python scripts/run_judge.py --input artifacts/.../prefixes.jsonl --latent-cache artifacts/.../latent-cache.jsonl --mode hybrid_surprise --output artifacts/.../judge-hybrid.jsonl
+uv run python scripts/render_demo.py --prefixes artifacts/.../prefixes.jsonl --baselines artifacts/.../baselines.jsonl --judge artifacts/.../judge-hybrid.jsonl --output artifacts/.../demo-artifact.md
+```
+
+That keeps dependency state explicit, gives us a lockfile, and makes the benchmark path reproducible.
 
 Current judge output includes:
 - `on_track_score`
