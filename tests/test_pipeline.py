@@ -100,6 +100,37 @@ def test_prefix_labels_detect_doomed_metaworld_style_prefix():
     assert prefix["prefix_recoverability_label"] == "doomed"
 
 
+def test_push_v3_late_contact_without_transport_is_now_labeled_doomed():
+    steps = []
+    for t in range(4):
+        steps.append(
+            {
+                "episode_id": "push-stall-ep-1",
+                "task_id": "push-v3",
+                "timestep": t,
+                "episode_horizon": 4,
+                "observation": [0.0, 0.0],
+                "action": [0.0],
+                "reward": 1.2 if t >= 2 else 0.2,
+                "done": t == 3,
+                "success_label": False,
+                "info": {
+                    "obj_to_target": 0.29 if t < 3 else 0.28,
+                    "near_object": 1.0,
+                    "in_place_reward": 0.18,
+                    "grasp_success": 0.8,
+                    "grasp_reward": 0.8,
+                    "success": 0.0,
+                    "unscaled_reward": 1.2 if t >= 2 else 0.2,
+                },
+            }
+        )
+    prefix = build_prefixes(steps, (0.75,))[0].to_dict()
+    assert prefix["final_success_label"] is False
+    assert prefix["prefix_failure_label"] is True
+    assert prefix["prefix_recoverability_label"] == "doomed"
+
+
 def test_reach_failures_do_not_get_masked_by_grasp_or_dense_reward():
     steps = []
     for t in range(4):

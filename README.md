@@ -109,8 +109,8 @@ uv run ruff check .
 uv run python scripts/build_prefixes.py --input artifacts/.../rollouts.jsonl --output artifacts/.../prefixes.jsonl
 uv run python scripts/build_latent_cache.py --rollouts artifacts/.../rollouts.jsonl --prefixes artifacts/.../prefixes.jsonl --output artifacts/.../latent-cache.jsonl
 uv run python scripts/run_judge.py --input artifacts/.../prefixes.jsonl --latent-cache artifacts/.../latent-cache.jsonl --mode hybrid_surprise --output artifacts/.../judge-hybrid.jsonl
-uv run python scripts/evaluate.py --prefixes artifacts/.../prefixes.jsonl --baselines artifacts/.../baselines.jsonl --judge artifacts/.../judge-hybrid.jsonl --output artifacts/.../summary.json --calibration-families weak,doomed --evaluation-families misleading,adversarial
-uv run python scripts/render_demo.py --prefixes artifacts/.../prefixes.jsonl --baselines artifacts/.../baselines.jsonl --judge artifacts/.../judge-hybrid.jsonl --output artifacts/.../demo-artifact.md
+uv run python scripts/evaluate.py --prefixes artifacts/.../prefixes.jsonl --baselines artifacts/.../baselines.jsonl --judge artifacts/.../judge-hybrid.jsonl --output artifacts/.../summary.json --calibration-families weak,doomed --evaluation-families expert,misleading
+uv run python scripts/render_demo.py --prefixes artifacts/.../prefixes.jsonl --baselines artifacts/.../baselines.jsonl --judge artifacts/.../judge-hybrid.jsonl --families expert,misleading --output artifacts/.../demo-artifact.md
 ```
 
 That keeps dependency state explicit, gives us a lockfile, and makes the benchmark path reproducible.
@@ -133,9 +133,9 @@ What is already real:
 
 What is still not solved:
 - the current judge is still a lighter heuristic/composite proxy, not a faithful JEPA-native latent verifier
-- the checked-in artifacts still mostly rely on **in-slice** threshold selection even though the code path now supports held-out family calibration
-- failure labels are still narrower than the full recoverability story we eventually want
-- `push-v3` remains the main weak task in the real slice
+- the repo now has one checked-in **held-out family split** artifact set, but it is still a small smoke slice rather than broad held-out coverage
+- `push-v3` late-prefix failure labeling is materially less slippery than before, but broader recoverability labeling is still too narrow
+- the current judge is still strongest on the narrow hard-family smoke slice; broader held-out slices still need more coverage before the story is robust
 
 ## Non-goals
 
@@ -148,11 +148,10 @@ What is still not solved:
 
 ## Immediate next moves
 
-1. run a true held-out family calibration pass so the artifact set contains at least one non-in-slice threshold story
-2. harden `push-v3` so the calibrated judge stops missing the single labeled failure in the real hard-family slice
-3. widen failure and recoverability labeling beyond narrow late-prefix doomed cases
-4. add score-over-time replay visuals with baseline disagreement and raw evidence decomposition
-5. only then push toward a more faithful JEPA-native judge implementation
+1. widen failure and recoverability labeling beyond the current late-prefix doomed cases
+2. run larger held-out real slices so the threshold story survives beyond one smoke artifact
+3. make the replay surface richer with frame-level or rendered-state snapshots, not just scalar score drift
+4. only then push toward a more faithful JEPA-native judge implementation
 
 ## Repo map
 
@@ -172,6 +171,7 @@ What is still not solved:
 - `docs/spec/DEEPENING-PASS-2.md` — benchmark tightening pass
 - `docs/spec/DEEPENING-PASS-3.md` — showcase tightening pass
 - `docs/spec/DEEPENING-PASS-4.md` — evaluation-honesty pass for held-out calibration provenance and benchmark reporting
+- `docs/spec/DEEPENING-PASS-5.md` — held-out artifact execution pass, push-v3 hardening, and score-replay reporting
 - `docs/spec/IMPLEMENTATION-PLAN.md` — exact build order, file plan, and verification path
 - `docs/rfcs/` — design decisions and v1/v2 boundaries
 

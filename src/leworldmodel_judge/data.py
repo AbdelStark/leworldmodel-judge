@@ -256,6 +256,27 @@ def _prefix_labels(
             return False, "recoverable"
         return False, "at_risk"
 
+    if task_id == "push-v3":
+        if prefix_fraction >= 0.75 and distance_regret > 0.18 and last_distance > 0.30:
+            return True, "doomed"
+        if prefix_fraction >= 0.75 and distance_progress < 0.05 and last_distance > 0.18 and in_place < 0.25:
+            return True, "doomed"
+        if (
+            prefix_fraction >= 0.75
+            and engaged >= 0.45
+            and transport < 0.25
+            and distance_regret > 0.08
+            and last_distance > 0.18
+        ):
+            return True, "doomed"
+        if prefix_fraction >= 0.50 and engaged < 0.20 and far_from_target and weak_prefix:
+            return True, "doomed"
+        if prefix_fraction >= 0.50 and engaged < 0.20 and last_distance > 0.20 and reward_density < 0.12:
+            return True, "doomed"
+        if transport >= 0.35:
+            return False, "recoverable"
+        return False, "at_risk"
+
     if prefix_fraction >= 0.75 and distance_regret > 0.18 and last_distance > 0.30:
         return True, "doomed"
     if prefix_fraction >= 0.75 and stalled and far_from_target and no_contact:

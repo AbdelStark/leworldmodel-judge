@@ -13,9 +13,11 @@
 - Prefix records now carry Meta-World-derived signals (`obj_to_target`, `in_place_reward`, `grasp`, `success`, `unscaled_reward`)
 - Judge v1 upgraded from a pure placeholder heuristic to a label-free composite prefix judge with explicit raw sub-scores
 - Evaluator now supports held-out family calibration provenance and average-precision reporting
+- Push-v3 prefix labeling now catches late contact-without-transport failures much more honestly
+- Demo artifacts now emit episode-level score replay tables in addition to mean timeline plots
 
 ## Current phase
-**Held-out calibration hardening + task-aware failure coverage + family-aware reporting**
+**Held-out artifact execution + push-v3 hardening + replay reporting**
 
 ## Current milestone target
 Ship an honest benchmark surface with both artifact types:
@@ -91,14 +93,42 @@ Interpretation:
 - the pipeline is now using a true sparse-success baseline rather than the dense shaping reward sum
 - the synthetic hard-family benchmark is now a much cleaner proof surface: calibrated judge false positives dropped from `0.294118` to `0.029412` while preserving full hit rate on the narrow labeled failures
 - the real hard-family smoke now has family-aware reports, in-slice calibration, and far better task-aware coverage; `pick-place-v3` moved from zero failure labels to late-prefix doomed labels with `0.333333` coverage
-- the code path now supports held-out family calibration provenance and average-precision reporting, but the checked-in benchmark artifacts still need a true held-out rerun before the threshold story is publishable
-- the real benchmark is still not solved: push-v3 remains brittle and the calibrated judge gives up one hit (`12/13`) to buy a large false-positive reduction
+- the code path now supports held-out family calibration provenance and average-precision reporting; the newer `2026-04-28` artifact turns that path into a real checked-in benchmark surface
+- the old `2026-04-23-v2` real smoke artifact is still useful as an in-slice debugging reference, but it should no longer be read as the repo's best threshold story
+
+### Held-out hard-family real artifact
+Artifact folder:
+- `artifacts/hard-family-real-held-out-2026-04-28/`
+
+Run shape:
+- source: real Meta-World hard families
+- calibration families: `weak`, `doomed`
+- evaluation families: `expert`, `misleading`
+- judge mode: `hybrid_surprise`
+- tasks: all locked v1 tasks
+- episodes per task/family: 1
+- total evaluation prefixes: 18
+
+Current summary (`summary.json`):
+- threshold mode: `held_out_family_split`
+- calibrated judge threshold: `0.311141`
+- overall judge pairwise accuracy: `1.0`
+- overall judge average precision: `1.0`
+- overall judge false positive rate: `0.1`
+- overall judge failure hit rate: `1.0`
+- push-v3 evaluation hit rate: `1.0` with `0.0` false positives
+- replay/demo outputs now include `demo-artifact-score-replay.csv`
+
+Interpretation:
+- this is the first checked-in artifact set where the threshold is actually coming from a disjoint family split instead of in-slice tuning
+- push-v3 no longer drops the held-out failures in this hard-family real slice after the task-aware late-prefix label hardening
+- the artifact is still small; it proves the wiring and the provenance story, not broad generalization
 
 ## Next milestone
-1. run a true held-out family calibration pass and save those artifacts separately from the in-slice debug runs
-2. harden push-v3 so the calibrated judge does not miss the single labeled failure
-3. widen failure-label coverage beyond the narrow late-prefix doomed cases
-4. add score-over-time replay visuals on top of the family-aware summary plots
+1. widen failure-label coverage beyond the current narrow late-prefix doomed cases
+2. run larger real held-out slices so the current held-out artifact is not the only publishable threshold story
+3. enrich replay reporting with rendered-state snapshots or frame strips, not just scalar score drift
+4. keep shrinking the remaining expert-family false positives in `pick-place-v3`
 
 ## V1 exit criteria
 - rollout capture works

@@ -74,6 +74,25 @@ def _family_name(prefix: dict) -> str:
     return "unknown"
 
 
+def _normalise_family_filter(families: str | None) -> set[str] | None:
+    if not families:
+        return None
+    parts = {part.strip() for part in families.split(",") if part.strip()}
+    return parts or None
+
+
+def _filter_inputs_by_family(
+    prefixes: list[dict], baselines: list[dict], judge: list[dict], families: set[str] | None
+) -> tuple[list[dict], list[dict], list[dict]]:
+    if not families:
+        return prefixes, baselines, judge
+    filtered_prefixes = [prefix for prefix in prefixes if _family_name(prefix) in families]
+    keep_keys = {_row_key(prefix) for prefix in filtered_prefixes}
+    filtered_baselines = [row for row in baselines if _row_key(row) in keep_keys]
+    filtered_judge = [row for row in judge if _row_key(row) in keep_keys]
+    return filtered_prefixes, filtered_baselines, filtered_judge
+
+
 def _comparison_rows(prefixes: list[dict], baselines: list[dict], judge: list[dict]) -> list[dict]:
     baseline_map = {_row_key(row): row for row in baselines}
     judge_map = {_row_key(row): row for row in judge}
@@ -117,6 +136,123 @@ def _comparison_rows(prefixes: list[dict], baselines: list[dict], judge: list[di
             row[evidence_key] = "" if value is None else round(float(value), 6)
         rows.append(row)
     return rows
+
+
+def _cutoff_token(cutoff: float) -> str:
+    return str(cutoff).replace(".", "p")
+
+
+def _episode_replay_rows(rows: list[dict]) -> list[dict]:
+    grouped: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    for row in rows:
+        grouped[(str(row["task_id"]), str(row["episode_id"]))].append(row)
+
+    replay_rows: list[dict] = []
+    for (task_id, episode_id), episode_rows in sorted(grouped.items()):
+        ordered = sorted(episode_rows, key=lambda row: float(row["prefix_cutoff"]))
+        head = ordered[0]
+        replay_row: dict[str, object] = {
+            "task_id": task_id,
+            "episode_id": episode_id,
+            "policy_family": head["policy_family"],
+            "success_label": bool(head["success_label"]),
+            "final_prefix_failure_label": bool(ordered[-1]["prefix_failure_label"]),
+            "final_prefix_recoverability_label": ordered[-1]["prefix_recoverability_label"],
+            "max_abs_gap": round(
+                max(abs(float(row["baseline_vs_judge_gap"])) for row in ordered),
+                6,
+            ),
+            "max_judge_metric": round(max(float(row["judge_metric"]) for row in ordered), 6),
+            "max_baseline_metric": round(max(float(row["baseline_metric"]) for row in ordered), 6),
+        }
+        previous_judge: float | None = None
+        previous_baseline: float | None = None
+        for row in ordered:
+            token = _cutoff_token(float(row["prefix_cutoff"]))
+            judge_metric = float(row["judge_metric"])
+            baseline_metric = float(row["baseline_metric"])
+            sparse_signal = float(row["sparse_reward_signal"])
+            replay_row[f"cutoff_{token}_judge_metric"] = round(judge_metric, 6)
+            replay_row[f"cutoff_{token}_baseline_metric"] = round(baseline_metric, 6)
+            replay_row[f"cutoff_{token}_sparse_reward_signal"] = round(sparse_signal, 6)
+            replay_row[f"cutoff_{token}_gap"] = round(float(row["baseline_vs_judge_gap"]), 6)
+            replay_row[f"cutoff_{token}_judge_delta"] = (
+                ""
+                if previous_judge is None
+                else round(judge_metric - previous_judge, 6)
+            )
+            replay_row[f"cutoff_{token}_baseline_delta"] = (
+                ""
+                if previous_baseline is None
+                else round(baseline_metric - previous_baseline, 6)
+            )
+            previous_judge = judge_metric
+            previous_baseline = baseline_metric
+        replay_rows.append(replay_row)
+    return replay_rows
+
+
+def _write_replay_csv(rows: list[dict], path: Path) -> None:
+    replay_rows = _episode_replay_rows(rows)
+    if not replay_rows:
+        headers = [
+            "task_id",
+            "episode_id",
+            "policy_family",
+            "success_label",
+            "final_prefix_failure_label",
+            "final_prefix_recoverability_label",
+            "max_abs_gap",
+            "max_judge_metric",
+            "max_baseline_metric",
+        ]
+    else:
+        static_headers = [
+            "task_id",
+            "episode_id",
+            "policy_family",
+            "success_label",
+            "final_prefix_failure_label",
+            "final_prefix_recoverability_label",
+            "max_abs_gap",
+            "max_judge_metric",
+            "max_baseline_metric",
+        ]
+        dynamic_headers = sorted(
+            {
+                header
+                for replay_row in replay_rows
+                for header in replay_row
+                if header not in static_headers
+            }
+        )
+        headers = static_headers + dynamic_headers
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=headers)
+        writer.writeheader()
+        writer.writerows(replay_rows)
+
+
+def _format_series(rows: list[dict], key: str) -> str:
+    ordered = sorted(rows, key=lambda row: float(row["prefix_cutoff"]))
+    return " -> ".join(f"{float(row[key]):.3f}" for row in ordered)
+
+
+def _top_replay_slices(rows: list[dict], limit: int = 5) -> list[list[dict]]:
+    grouped: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    for row in rows:
+        grouped[(str(row["task_id"]), str(row["episode_id"]))].append(row)
+    ranked = sorted(
+        grouped.values(),
+        key=lambda episode_rows: (
+            max(abs(float(row["baseline_vs_judge_gap"])) for row in episode_rows),
+            max(float(row["judge_uncertainty_score"]) for row in episode_rows),
+            max(float(row["judge_metric"]) for row in episode_rows),
+        ),
+        reverse=True,
+    )
+    return ranked[:limit]
 
 
 def _write_comparison_csv(rows: list[dict], path: Path) -> None:
@@ -294,6 +430,7 @@ def _markdown_artifact(
     plot_path: Path,
     disagreement_pack: list[dict],
     disagreement_pack_path: Path,
+    replay_path: Path,
 ) -> str:
     lines = ["# LeWorldModel Judge demo artifact", ""]
     lines.append("## What this artifact is for")
@@ -305,6 +442,7 @@ def _markdown_artifact(
     lines.append(f"- comparison table: `{csv_path.name}`")
     lines.append(f"- score timeline plot: `{plot_path.name}`")
     lines.append(f"- push-v3 hard-family disagreement pack: `{disagreement_pack_path.name}`")
+    lines.append(f"- episode score replay table: `{replay_path.name}`")
     lines.append("")
 
     if rows:
@@ -338,6 +476,22 @@ def _markdown_artifact(
                     f"uncertainty `{row['judge_uncertainty_score']}`; recoverability=`{row['prefix_recoverability_label']}`"
                 )
             lines.append("")
+
+        lines.append("## Score-over-time replays")
+        lines.append(
+            "- the replay CSV is one row per episode with per-cutoff judge/baseline/sparse signals and first-difference deltas so reviewers can audit drift, not just means"
+        )
+        for episode_rows in _top_replay_slices(rows):
+            ordered = sorted(episode_rows, key=lambda row: float(row["prefix_cutoff"]))
+            head = ordered[0]
+            lines.append(
+                f"- `{head['episode_id']}` ({head['task_id']}/{head['policy_family']}) success=`{head['success_label']}` → "
+                f"judge `{_format_series(ordered, 'judge_metric')}` | "
+                f"baseline `{_format_series(ordered, 'baseline_metric')}` | "
+                f"sparse `{_format_series(ordered, 'sparse_reward_signal')}` | "
+                f"latest label=`{ordered[-1]['prefix_recoverability_label']}`"
+            )
+        lines.append("")
 
         exemplar = _top_disagreements(rows, limit=1)[0]
         lines.append("## Evidence decomposition example")
@@ -386,11 +540,21 @@ def main() -> None:
         required=True,
         help="markdown artifact path; sibling CSV/plot files are emitted automatically",
     )
+    parser.add_argument(
+        "--families",
+        help="optional comma-separated policy families to include in the artifact",
+    )
     args = parser.parse_args()
 
     prefixes = read_jsonl(args.prefixes)
     baselines = read_jsonl(args.baselines)
     judge = read_jsonl(args.judge)
+    prefixes, baselines, judge = _filter_inputs_by_family(
+        prefixes,
+        baselines,
+        judge,
+        _normalise_family_filter(args.families),
+    )
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -402,17 +566,27 @@ def main() -> None:
     disagreement_pack_path = output_path.with_name(
         output_path.stem + "-push-v3-hard-disagreement-pack.csv"
     )
+    replay_path = output_path.with_name(output_path.stem + "-score-replay.csv")
 
     _write_comparison_csv(rows, csv_path)
     _write_comparison_csv(disagreement_pack, disagreement_pack_path)
+    _write_replay_csv(rows, replay_path)
     _write_timeline_plot(rows, plot_path)
     output_path.write_text(
-        _markdown_artifact(rows, csv_path, plot_path, disagreement_pack, disagreement_pack_path),
+        _markdown_artifact(
+            rows,
+            csv_path,
+            plot_path,
+            disagreement_pack,
+            disagreement_pack_path,
+            replay_path,
+        ),
         encoding="utf-8",
     )
     print(f"wrote demo artifact to {output_path}")
     print(f"wrote comparison table to {csv_path}")
     print(f"wrote push-v3 disagreement pack to {disagreement_pack_path}")
+    print(f"wrote episode replay table to {replay_path}")
     print(f"wrote timeline plot to {plot_path}")
 
 

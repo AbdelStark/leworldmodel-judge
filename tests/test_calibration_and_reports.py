@@ -258,18 +258,127 @@ def test_render_demo_emits_markdown_csv_and_timeline_plot(tmp_path):
     plot_png_path = tmp_path / "demo-timeline.png"
     plot_svg_path = tmp_path / "demo-timeline.svg"
     disagreement_pack_path = tmp_path / "demo-push-v3-hard-disagreement-pack.csv"
+    replay_path = tmp_path / "demo-score-replay.csv"
     assert output_path.exists()
     assert csv_path.exists()
     assert plot_png_path.exists() or plot_svg_path.exists()
     assert disagreement_pack_path.exists()
+    assert replay_path.exists()
 
     markdown = output_path.read_text()
     assert "Biggest baseline-vs-judge disagreements" in markdown
     assert "Push-v3 hard-family disagreement pack" in markdown
+    assert "Score-over-time replays" in markdown
     assert "Evidence decomposition example" in markdown
 
     rows = list(csv.DictReader(csv_path.open()))
     assert len(rows) == 2
     assert rows[0]["task_id"] == "push-v3"
     assert "baseline_vs_judge_gap" in rows[0]
+
+    replay_rows = list(csv.DictReader(replay_path.open()))
+    assert len(replay_rows) == 2
+    assert "cutoff_0p75_judge_metric" in replay_rows[0]
     assert _comparison_rows(prefixes, baselines, judge)[0]["judge_metric"] == 0.81
+
+
+def test_render_demo_family_filter_limits_output_rows(tmp_path):
+    prefixes = [
+        {
+            "episode_id": "push-v3-doomed-ep-0",
+            "task_id": "push-v3",
+            "policy_family": "doomed",
+            "prefix_index": 15,
+            "prefix_fraction": 0.75,
+            "final_success_label": False,
+            "prefix_failure_label": True,
+            "prefix_recoverability_label": "doomed",
+        },
+        {
+            "episode_id": "push-v3-expert-ep-0",
+            "task_id": "push-v3",
+            "policy_family": "expert",
+            "prefix_index": 15,
+            "prefix_fraction": 0.75,
+            "final_success_label": False,
+            "prefix_failure_label": True,
+            "prefix_recoverability_label": "doomed",
+        },
+    ]
+    baselines = [
+        {
+            "episode_id": "push-v3-doomed-ep-0",
+            "task_id": "push-v3",
+            "prefix_fraction": 0.75,
+            "sparse_reward_score": 0.0,
+            "progress_proxy_score": 0.2,
+            "terminal_success_score": 0.0,
+        },
+        {
+            "episode_id": "push-v3-expert-ep-0",
+            "task_id": "push-v3",
+            "prefix_fraction": 0.75,
+            "sparse_reward_score": 0.0,
+            "progress_proxy_score": 0.2,
+            "terminal_success_score": 0.0,
+        },
+    ]
+    judge = [
+        {
+            "episode_id": "push-v3-doomed-ep-0",
+            "task_id": "push-v3",
+            "prefix_fraction": 0.75,
+            "failure_score": 0.8,
+            "on_track_score": 0.1,
+            "implausibility_score": 0.7,
+            "uncertainty_score": 0.2,
+        },
+        {
+            "episode_id": "push-v3-expert-ep-0",
+            "task_id": "push-v3",
+            "prefix_fraction": 0.75,
+            "failure_score": 0.3,
+            "on_track_score": 0.6,
+            "implausibility_score": 0.2,
+            "uncertainty_score": 0.1,
+        },
+    ]
+
+    from leworldmodel_judge.io import write_jsonl
+    from scripts.render_demo import main as render_demo_main
+
+    prefixes_path = tmp_path / "prefixes.jsonl"
+    baselines_path = tmp_path / "baselines.jsonl"
+    judge_path = tmp_path / "judge.jsonl"
+    output_path = tmp_path / "demo.md"
+    write_jsonl(prefixes_path, prefixes)
+    write_jsonl(baselines_path, baselines)
+    write_jsonl(judge_path, judge)
+
+    import sys
+
+    old_argv = sys.argv
+    sys.argv = [
+        "render_demo.py",
+        "--prefixes",
+        str(prefixes_path),
+        "--baselines",
+        str(baselines_path),
+        "--judge",
+        str(judge_path),
+        "--output",
+        str(output_path),
+        "--families",
+        "expert",
+    ]
+    try:
+        render_demo_main()
+    finally:
+        sys.argv = old_argv
+
+    rows = list(csv.DictReader((tmp_path / "demo-comparison.csv").open()))
+    replay_rows = list(csv.DictReader((tmp_path / "demo-score-replay.csv").open()))
+    assert len(rows) == 1
+    assert len(replay_rows) == 1
+    assert rows[0]["policy_family"] == "expert"
+    assert replay_rows[0]["policy_family"] == "expert"
