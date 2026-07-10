@@ -4,29 +4,80 @@ build-backend = "hatchling.build"
 
 [project]
 name = "leworldmodel-judge"
-version = "0.1.0"
-description = "JEPA-anchored prefix-level trajectory judge for manipulation RL"
+dynamic = ["version"]
+description = "A world model as a judge: early, auditable verdicts on partial robot-manipulation rollouts"
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [{ name = "Abdel" }]
-dependencies = [
-  "matplotlib>=3.9,<4",
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Abdelhamid Bakhta", email = "abdelhamid.bakhta@gmail.com" }]
+keywords = [
+  "world-model",
+  "jepa",
+  "reinforcement-learning",
+  "trajectory-evaluation",
+  "reward-model",
+  "metaworld",
+  "robotics",
 ]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Typing :: Typed",
+]
+# Stdlib-only core: the library itself depends on nothing.
+dependencies = []
+
+[project.optional-dependencies]
+viz = ["matplotlib>=3.9,<4"]
+# Hard pin: benchmark artifacts are only reproducible against this exact release.
+metaworld = ["metaworld==3.0.0"]
+
+[project.scripts]
+lewm-judge = "leworldmodel_judge.cli:main"
+
+[project.urls]
+Repository = "https://github.com/AbdelStark/leworldmodel-judge"
+Issues = "https://github.com/AbdelStark/leworldmodel-judge/issues"
+
+[tool.hatch.version]
+path = "src/leworldmodel_judge/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/leworldmodel_judge"]
+
+[tool.hatch.build.targets.sdist]
+# Explicit sdist selection: hatchling's default (everything not gitignored)
+# would sweep working-tree state (out/, artifacts/, local tool caches) into
+# the published archive. Only the source of the package belongs here.
+only-include = [
+  "src/leworldmodel_judge",
+  "tests",
+  "docs",
+  "README.md",
+  "LICENSE",
+  "CHANGELOG.md",
+  "CITATION.cff",
+]
 
 [dependency-groups]
 dev = [
   "pytest>=8.3,<9",
   "ruff>=0.11,<0.12",
+  "mypy>=1.14,<2",
+  "matplotlib>=3.9,<4",
 ]
 benchmark = [
   "metaworld==3.0.0",
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "."]
+pythonpath = ["src"]
 testpaths = ["tests"]
 
 [tool.ruff]
@@ -34,5 +85,18 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP"]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "RUF", "PT"]
+# E501: ruff format is the line-length authority.
 ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src"]
+strict = true
+
+[[tool.mypy.overrides]]
+# metaworld is an optional, only partially typed dependency imported lazily in
+# collect.py; treat it as Any whether or not it is installed.
+module = ["metaworld", "metaworld.*"]
+ignore_missing_imports = true
+follow_imports = "skip"

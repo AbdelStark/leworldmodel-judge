@@ -3,6 +3,11 @@ __pycache__/
 *.egg-info/
 .venv/
 .env
-results/*.png
-results/*.csv
-results/*.json
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+.coverage
+out/
+.claude/

@@ -1,7 +1,7 @@
-from leworldmodel_judge.data import build_prefixes
-from leworldmodel_judge.evaluate import summarize
+from leworldmodel_judge.collect import collect_synthetic
 from leworldmodel_judge.judge import heuristic_surprise_score
-from scripts.collect_rollouts import collect_synthetic
+from leworldmodel_judge.metrics import summarize
+from leworldmodel_judge.prefixes import build_prefixes
 
 
 def test_synthetic_doomed_family_creates_failure_with_partial_progress():

@@ -1,5 +1,8 @@
 # RFC-009 — Public positioning and claim discipline
 
+- **Status:** Accepted
+- **Date:** 2026-04-23
+
 ## Decision
 All public-facing language must stay narrower than the architecture’s maximum ambition.
 

@@ -1,5 +1,8 @@
 # RFC-001 — Problem shape
 
+- **Status:** Accepted
+- **Date:** 2026-04-23
+
 ## Decision
 The project is about **trajectory judging in embodied RL**, not universal reward replacement.
 

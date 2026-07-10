@@ -9,7 +9,28 @@
       "hit_rate": 1.0,
       "false_positive_rate": 0.029412,
       "balanced_accuracy": 0.985294,
-      "mode": "in_slice_balanced_accuracy"
+      "mode": "in_slice_balanced_accuracy",
+      "cohort_stats": {
+        "count": 72,
+        "failure_labels": 4,
+        "non_failure_labels": 68,
+        "pairwise_accuracy": 0.985294,
+        "auroc": 0.985294,
+        "average_precision": 0.666667
+      },
+      "evaluation_stats": {
+        "hit_rate": 1.0,
+        "false_positive_rate": 0.029412,
+        "balanced_accuracy": 0.985294
+      },
+      "evaluation_cohort": {
+        "count": 72,
+        "failure_labels": 4,
+        "non_failure_labels": 68,
+        "pairwise_accuracy": 0.985294,
+        "auroc": 0.985294,
+        "average_precision": 0.666667
+      }
     },
     "progress": {
       "recommended_threshold": 0.8,
@@ -17,6 +38,21 @@
       "false_positive_rate": null,
       "balanced_accuracy": null,
       "mode": "fixed_progress_baseline"
+    },
+    "provenance": {
+      "calibration_families": [
+        "all"
+      ],
+      "evaluation_families": [
+        "all"
+      ],
+      "family_overlap": true,
+      "calibration_count": 72,
+      "evaluation_count": 72,
+      "calibration_failure_labels": 4,
+      "calibration_non_failure_labels": 68,
+      "evaluation_failure_labels": 4,
+      "evaluation_non_failure_labels": 68
     }
   },
   "overall": {
@@ -37,8 +73,14 @@
     "baseline_progress_false_positive_rate": 0.176471,
     "failure_label_coverage": 0.055556,
     "judge_pairwise_accuracy": 0.985294,
+    "judge_auroc": 0.985294,
+    "judge_average_precision": 0.666667,
     "baseline_sparse_absence_pairwise_accuracy": 0.5,
-    "baseline_progress_pairwise_accuracy": 0.147059
+    "baseline_sparse_absence_auroc": 0.5,
+    "baseline_sparse_absence_average_precision": 0.055556,
+    "baseline_progress_pairwise_accuracy": 0.147059,
+    "baseline_progress_auroc": 0.147059,
+    "baseline_progress_average_precision": 0.060606
   },
   "tasks": {
     "reach-v3": {
@@ -51,16 +93,22 @@
       "baseline_sparse_absence_false_positives": 24,
       "baseline_progress_hits": 0,
       "baseline_progress_false_positives": 4,
-      "judge_failure_hit_rate": 0.0,
+      "judge_failure_hit_rate": null,
       "judge_false_positive_rate": 0.083333,
-      "baseline_sparse_absence_hit_rate": 0.0,
+      "baseline_sparse_absence_hit_rate": null,
       "baseline_sparse_absence_false_positive_rate": 1.0,
-      "baseline_progress_hit_rate": 0.0,
+      "baseline_progress_hit_rate": null,
       "baseline_progress_false_positive_rate": 0.166667,
       "failure_label_coverage": 0.0,
       "judge_pairwise_accuracy": null,
+      "judge_auroc": null,
+      "judge_average_precision": null,
       "baseline_sparse_absence_pairwise_accuracy": null,
-      "baseline_progress_pairwise_accuracy": null
+      "baseline_sparse_absence_auroc": null,
+      "baseline_sparse_absence_average_precision": null,
+      "baseline_progress_pairwise_accuracy": null,
+      "baseline_progress_auroc": null,
+      "baseline_progress_average_precision": null
     },
     "push-v3": {
       "count": 24,
@@ -80,8 +128,14 @@
       "baseline_progress_false_positive_rate": 0.181818,
       "failure_label_coverage": 0.083333,
       "judge_pairwise_accuracy": 1.0,
+      "judge_auroc": 1.0,
+      "judge_average_precision": 1.0,
       "baseline_sparse_absence_pairwise_accuracy": 0.5,
-      "baseline_progress_pairwise_accuracy": 0.136364
+      "baseline_sparse_absence_auroc": 0.5,
+      "baseline_sparse_absence_average_precision": 0.083333,
+      "baseline_progress_pairwise_accuracy": 0.136364,
+      "baseline_progress_auroc": 0.136364,
+      "baseline_progress_average_precision": 0.090909
     },
     "pick-place-v3": {
       "count": 24,
@@ -101,8 +155,14 @@
       "baseline_progress_false_positive_rate": 0.181818,
       "failure_label_coverage": 0.083333,
       "judge_pairwise_accuracy": 1.0,
+      "judge_auroc": 1.0,
+      "judge_average_precision": 1.0,
       "baseline_sparse_absence_pairwise_accuracy": 0.5,
-      "baseline_progress_pairwise_accuracy": 0.136364
+      "baseline_sparse_absence_auroc": 0.5,
+      "baseline_sparse_absence_average_precision": 0.083333,
+      "baseline_progress_pairwise_accuracy": 0.136364,
+      "baseline_progress_auroc": 0.136364,
+      "baseline_progress_average_precision": 0.090909
     }
   },
   "families": {
@@ -116,16 +176,22 @@
       "baseline_sparse_absence_false_positives": 18,
       "baseline_progress_hits": 0,
       "baseline_progress_false_positives": 0,
-      "judge_failure_hit_rate": 0.0,
+      "judge_failure_hit_rate": null,
       "judge_false_positive_rate": 0.0,
-      "baseline_sparse_absence_hit_rate": 0.0,
+      "baseline_sparse_absence_hit_rate": null,
       "baseline_sparse_absence_false_positive_rate": 1.0,
-      "baseline_progress_hit_rate": 0.0,
+      "baseline_progress_hit_rate": null,
       "baseline_progress_false_positive_rate": 0.0,
       "failure_label_coverage": 0.0,
       "judge_pairwise_accuracy": null,
+      "judge_auroc": null,
+      "judge_average_precision": null,
       "baseline_sparse_absence_pairwise_accuracy": null,
-      "baseline_progress_pairwise_accuracy": null
+      "baseline_sparse_absence_auroc": null,
+      "baseline_sparse_absence_average_precision": null,
+      "baseline_progress_pairwise_accuracy": null,
+      "baseline_progress_auroc": null,
+      "baseline_progress_average_precision": null
     },
     "weak": {
       "count": 18,
@@ -137,16 +203,22 @@
       "baseline_sparse_absence_false_positives": 18,
       "baseline_progress_hits": 0,
       "baseline_progress_false_positives": 6,
-      "judge_failure_hit_rate": 0.0,
+      "judge_failure_hit_rate": null,
       "judge_false_positive_rate": 0.0,
-      "baseline_sparse_absence_hit_rate": 0.0,
+      "baseline_sparse_absence_hit_rate": null,
       "baseline_sparse_absence_false_positive_rate": 1.0,
-      "baseline_progress_hit_rate": 0.0,
+      "baseline_progress_hit_rate": null,
       "baseline_progress_false_positive_rate": 0.333333,
       "failure_label_coverage": 0.0,
       "judge_pairwise_accuracy": null,
+      "judge_auroc": null,
+      "judge_average_precision": null,
       "baseline_sparse_absence_pairwise_accuracy": null,
-      "baseline_progress_pairwise_accuracy": null
+      "baseline_sparse_absence_auroc": null,
+      "baseline_sparse_absence_average_precision": null,
+      "baseline_progress_pairwise_accuracy": null,
+      "baseline_progress_auroc": null,
+      "baseline_progress_average_precision": null
     },
     "doomed": {
       "count": 18,
@@ -166,8 +238,14 @@
       "baseline_progress_false_positive_rate": 0.0,
       "failure_label_coverage": 0.222222,
       "judge_pairwise_accuracy": 0.928571,
+      "judge_auroc": 0.928571,
+      "judge_average_precision": 0.666667,
       "baseline_sparse_absence_pairwise_accuracy": 0.5,
-      "baseline_progress_pairwise_accuracy": 0.285714
+      "baseline_sparse_absence_auroc": 0.5,
+      "baseline_sparse_absence_average_precision": 0.222222,
+      "baseline_progress_pairwise_accuracy": 0.285714,
+      "baseline_progress_auroc": 0.285714,
+      "baseline_progress_average_precision": 0.222222
     },
     "misleading": {
       "count": 18,
@@ -179,16 +257,22 @@
       "baseline_sparse_absence_false_positives": 18,
       "baseline_progress_hits": 0,
       "baseline_progress_false_positives": 6,
-      "judge_failure_hit_rate": 0.0,
+      "judge_failure_hit_rate": null,
       "judge_false_positive_rate": 0.0,
-      "baseline_sparse_absence_hit_rate": 0.0,
+      "baseline_sparse_absence_hit_rate": null,
       "baseline_sparse_absence_false_positive_rate": 1.0,
-      "baseline_progress_hit_rate": 0.0,
+      "baseline_progress_hit_rate": null,
       "baseline_progress_false_positive_rate": 0.333333,
       "failure_label_coverage": 0.0,
       "judge_pairwise_accuracy": null,
+      "judge_auroc": null,
+      "judge_average_precision": null,
       "baseline_sparse_absence_pairwise_accuracy": null,
-      "baseline_progress_pairwise_accuracy": null
+      "baseline_sparse_absence_auroc": null,
+      "baseline_sparse_absence_average_precision": null,
+      "baseline_progress_pairwise_accuracy": null,
+      "baseline_progress_auroc": null,
+      "baseline_progress_average_precision": null
     }
   }
 }

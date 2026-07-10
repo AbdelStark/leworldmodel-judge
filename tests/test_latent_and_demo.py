@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from leworldmodel_judge.judge import heuristic_surprise_score, hybrid_surprise_score
+import logging
+
+from leworldmodel_judge import demo, plotting
+from leworldmodel_judge.judge import heuristic_surprise_score, hybrid_surprise_score, run_judge
 from leworldmodel_judge.latents import build_latent_cache
-from scripts import render_demo
 
 
 def _step(
@@ -106,6 +108,67 @@ def test_hybrid_surprise_score_appends_latent_fields_and_changes_failure_score()
     assert hybrid["failure_score"] > heuristic["failure_score"]
 
 
+def test_run_judge_warns_when_latent_cache_joins_zero_prefixes(caplog) -> None:
+    """A stale non-empty cache that joins nothing must warn, not degrade silently."""
+    prefix = {
+        "episode_id": "push-v3-misleading-ep-0",
+        "task_id": "push-v3",
+        "policy_family": "misleading",
+        "prefix_fraction": 0.5,
+        "progress_proxy": 0.2,
+        "sparse_reward_prefix": 0.0,
+    }
+    stale_cache = [
+        {
+            # Same task, different episode: never joins the prefix above.
+            "episode_id": "push-v3-misleading-ep-9",
+            "task_id": "push-v3",
+            "prefix_fraction": 0.5,
+            "latent_mismatch_score": 0.9,
+            "latent_alignment_score": 0.1,
+        }
+    ]
+
+    with caplog.at_level(logging.WARNING, logger="leworldmodel_judge.judge"):
+        rows = run_judge([prefix], mode="hybrid_surprise", latent_rows=stale_cache)
+
+    warnings = [record.getMessage() for record in caplog.records]
+    assert any("joined 0 of 1 prefixes" in message for message in warnings)
+    # Row values are unchanged: composite scores plus the default latent fields.
+    assert rows == [hybrid_surprise_score(prefix, None)]
+    composite = heuristic_surprise_score(prefix)
+    assert rows[0]["failure_score"] == composite["failure_score"]
+    assert rows[0]["latent_mismatch_score"] == 0.0
+    assert rows[0]["latent_alignment_score"] == 1.0
+    assert rows[0]["judge_mode"] == "hybrid_prefix_latent_judge"
+
+
+def test_run_judge_does_not_warn_when_cache_joins_every_prefix(caplog) -> None:
+    prefix = {
+        "episode_id": "push-v3-misleading-ep-0",
+        "task_id": "push-v3",
+        "policy_family": "misleading",
+        "prefix_fraction": 0.5,
+        "progress_proxy": 0.2,
+        "sparse_reward_prefix": 0.0,
+    }
+    cache = [
+        {
+            "episode_id": "push-v3-misleading-ep-0",
+            "task_id": "push-v3",
+            "prefix_fraction": 0.5,
+            "latent_mismatch_score": 0.4,
+            "latent_alignment_score": 0.6,
+        }
+    ]
+
+    with caplog.at_level(logging.WARNING, logger="leworldmodel_judge.judge"):
+        rows = run_judge([prefix], mode="hybrid_surprise", latent_rows=cache)
+
+    assert not caplog.records
+    assert rows[0]["latent_mismatch_score"] == 0.4
+
+
 def test_timeline_plot_uses_real_svg_fallback_without_matplotlib(tmp_path, monkeypatch) -> None:
     rows = [
         {
@@ -123,9 +186,9 @@ def test_timeline_plot_uses_real_svg_fallback_without_matplotlib(tmp_path, monke
     ]
     target = tmp_path / "timeline.svg"
 
-    monkeypatch.setattr(render_demo, "MATPLOTLIB_AVAILABLE", False)
-    monkeypatch.setattr(render_demo, "plt", None)
-    render_demo._write_timeline_plot(rows, target)
+    monkeypatch.setattr(plotting, "MATPLOTLIB_AVAILABLE", False)
+    monkeypatch.setattr(plotting, "plt", None)
+    demo._write_timeline_plot(rows, target)
 
     payload = target.read_text(encoding="utf-8")
     assert payload.lstrip().startswith("<svg")
@@ -197,7 +260,7 @@ def test_push_v3_hard_disagreement_pack_prefers_family_diversity() -> None:
         },
     ]
 
-    pack = render_demo._build_push_v3_hard_disagreement_pack(rows, limit=4)
+    pack = demo._build_push_v3_hard_disagreement_pack(rows, limit=4)
 
     assert len(pack) == 4
     assert {row["task_id"] for row in pack} == {"push-v3"}

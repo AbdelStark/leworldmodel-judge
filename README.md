@@ -1,184 +1,180 @@
 # LeWorldModel Judge
 
-A JEPA-anchored embodied RL showcase for **prefix-level trajectory verification** and **verifiable-reward-style judging**.
+A world model as a judge: early, auditable verdicts on partial robot-manipulation rollouts.
 
-## Core thesis
+[![CI](https://github.com/AbdelStark/leworldmodel-judge/actions/workflows/ci.yml/badge.svg)](https://github.com/AbdelStark/leworldmodel-judge/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 
-This project studies whether a world-model-derived judge can score whether **partial manipulation rollouts** are still on track, already failed, or physically implausible before sparse reward or terminal success fully reveals the answer.
+## The idea
 
-The project is intentionally narrow.
-It is **not** trying to build a universal reward model for all RL.
-It is trying to answer one practical question:
+Sparse reward says nothing useful about a trajectory until it is over. The bet here is that a
+world-model-derived surprise signal can judge a partial rollout earlier — still on track, already
+doomed, physically implausible, or too uncertain to call — and beat sparse reward on false
+positives and ranking. The benchmark slice is locked: Meta-World `reach-v3`, `push-v3`,
+`pick-place-v3`, prefixes cut at 0.25/0.50/0.75 of the episode horizon, stress-tested with
+explicit policy families (`expert`, `weak`, `doomed`, `misleading`). A fifth family, `random`,
+exists in the collector as a negative control; its earlier run lives in git history, and the
+checked-in artifacts cover the four families above.
 
-> can a world-model-derived, audit-friendly judging signal add useful information over sparse reward alone in manipulation rollouts?
+The shipped judge is a composite heuristic over decomposed prefix evidence (progress, distance,
+grasp, reward density, stall), plus a hybrid mode that adds an observation-space latent proxy:
+mean-pooled observation windows with a linear-extrapolation predictor, scored against the
+realized post-cutoff observations — a replay-time signal for completed episodes, not a
+cutoff-time one (see [docs/method.md](docs/method.md#cutoff-time-vs-replay-time-judging)). That is JEPA-anchored in
+thesis, not JEPA-faithful in implementation — there is no learned encoder and no trained latent
+dynamics model yet. Every scored row carries a `judge_mode` field, so no number can hide which
+judge produced it.
 
-## Why this exists
+Auditability is the point. Every verdict decomposes into raw sub-scores, serialized as JSONL and
+CSV, replayable per episode and per prefix. Summary files state whether the failure threshold was
+fixed, tuned in-slice, or calibrated on a held-out family split — and name the calibration and
+evaluation cohorts. A reviewer can challenge any score by reading the rollout, the prefix record,
+and the evidence fields, without rerunning anything.
 
-Sparse reward is often too late and too weak to say much about partial trajectories.
-For many embodied tasks, the interesting information appears earlier:
-- the grasp is already doomed
-- the object is moving off the intended path
-- the scene transition is physically implausible
-- the agent is still technically alive but no longer recoverable
+## Pipeline
 
-A judge that can detect those states earlier is interesting for:
-- early failure detection
-- trajectory ranking
-- offline RL data filtering
-- process reward modeling for embodied agents
-- replay triage and policy debugging
-
-## Strategic anchor: why LeWorldModel
-
-This repo is anchored on **LeWorldModel** as the conceptual JEPA family because it gives the cleanest positioning for:
-- JEPA-native taste
-- world-model-first framing
-- physical regularity / surprise language
-- AMI-style world-model / physical reasoning alignment
-
-Important honesty rule:
-- v1 does **not** claim a heavyweight faithful reproduction of LeWorldModel
-- v1 currently ships a lighter **composite prefix judge** with explicit raw sub-scores and calibration artifacts
-- stronger architectural faithfulness belongs in later phases if the benchmark and replay surface prove the story is real
-
-## Verifiable rewards angle
-
-This repo uses **verifiable rewards** in the practical showcase sense, not the cryptographic-marketing sense.
-
-What that means here:
-- the judge output is file-based and replay-inspectable
-- each scored prefix carries decomposed evidence fields, not just one magic scalar
-- benchmark summaries preserve threshold provenance and family slices
-- another reviewer should be able to challenge a score by looking at the rollout, the prefix record, and the raw sub-scores
-
-What it does **not** mean yet:
-- cryptographic proof of reward correctness
-- a production-safe online RL reward function
-- a universal verifier for all embodied tasks
-
-## Main claim this repo is trying to earn
-
-> A world-model-derived trajectory judge can detect doomed manipulation trajectories earlier, or rank partial rollouts better, than sparse reward alone — while producing more inspectable process-reward-style evidence than a raw scalar baseline.
-
-That is the exact claim the benchmark should live or die on.
-
-## V1 benchmark slice
-
-### Environment family
-- **Meta-World**
-
-### Locked tasks
-- `reach-v3`
-- `push-v3`
-- `pick-place-v3`
-
-### Prefix cutoffs
-- `0.25`
-- `0.50`
-- `0.75`
-
-### Policy families used to stress the benchmark
-- `expert`
-- `weak`
-- `doomed`
-- `misleading`
-- `random`
-
-## Current system shape
-
-The current repo already contains a working end-to-end benchmark path:
-- rollout capture and normalization
-- prefix building with Meta-World-derived signals
-- latent-cache generation for prefix/future comparisons
-- baseline scorers
-- a composite prefix judge plus a hybrid latent-augmented judge
-- summary metrics with threshold recommendation
-- held-out-family calibration provenance support in the evaluator
-- family-aware markdown and plot reports
-- synthetic hard-family benchmark artifacts
-- real Meta-World smoke artifacts
-
-## Modern local workflow
-
-This repo now works as a modern `uv` project.
-
-```bash
-uv sync
-uv run pytest
-uv run ruff check .
-uv run python scripts/build_prefixes.py --input artifacts/.../rollouts.jsonl --output artifacts/.../prefixes.jsonl
-uv run python scripts/build_latent_cache.py --rollouts artifacts/.../rollouts.jsonl --prefixes artifacts/.../prefixes.jsonl --output artifacts/.../latent-cache.jsonl
-uv run python scripts/run_judge.py --input artifacts/.../prefixes.jsonl --latent-cache artifacts/.../latent-cache.jsonl --mode hybrid_surprise --output artifacts/.../judge-hybrid.jsonl
-uv run python scripts/evaluate.py --prefixes artifacts/.../prefixes.jsonl --baselines artifacts/.../baselines.jsonl --judge artifacts/.../judge-hybrid.jsonl --output artifacts/.../summary.json --calibration-families weak,doomed --evaluation-families expert,misleading
-uv run python scripts/render_demo.py --prefixes artifacts/.../prefixes.jsonl --baselines artifacts/.../baselines.jsonl --judge artifacts/.../judge-hybrid.jsonl --families expert,misleading --output artifacts/.../demo-artifact.md
+```mermaid
+flowchart LR
+    C[collect] -->|rollouts.jsonl| P[prefixes]
+    C & P --> L[latents]
+    P --> B[baselines]
+    P --> J[judge]
+    L -->|latent-cache.jsonl| J
+    P & B & J --> E[evaluate]
+    E -->|summary.json| R[report]
+    P & B & J --> D[demo]
 ```
 
-That keeps dependency state explicit, gives us a lockfile, and makes the benchmark path reproducible.
+## Quickstart
 
-Current judge output includes:
-- `on_track_score`
-- `failure_score`
-- `implausibility_score`
-- `uncertainty_score`
-- decomposed evidence fields like progress, distance progress, in-place, near-object, grasp, reward, and stall evidence
+```bash
+uv sync   # the default dev group includes matplotlib; pip/wheel installs need the viz extra for PNG plots, else SVG fallback
 
-## Current honest read
+# 1. Collect synthetic rollouts for the locked task trio across four policy families
+uv run lewm-judge collect --source synthetic --task all --episodes 5 \
+  --policy-family expert,weak,doomed,misleading --output out/rollouts.jsonl
 
-What is already real:
-- the pipeline runs end-to-end
-- the hard-family synthetic slice gives clean separation between judge and weak baselines
-- the real hard-family smoke now has materially better false-positive behavior after calibration
-- family-aware reports make it obvious where the judge wins and where it still misses
-- the evaluator now records calibration provenance, held-out family splits, and average-precision views instead of pretending every threshold is the same kind of evidence
+# 2. Slice into prefixes at 0.25 / 0.50 / 0.75 of the horizon
+uv run lewm-judge prefixes --input out/rollouts.jsonl --output out/prefixes.jsonl
 
-What is still not solved:
-- the current judge is still a lighter heuristic/composite proxy, not a faithful JEPA-native latent verifier
-- the repo now has one checked-in **held-out family split** artifact set, but it is still a small smoke slice rather than broad held-out coverage
-- `push-v3` late-prefix failure labeling is materially less slippery than before, but broader recoverability labeling is still too narrow
-- the current judge is still strongest on the narrow hard-family smoke slice; broader held-out slices still need more coverage before the story is robust
+# 3. Build the observation-space latent cache
+uv run lewm-judge latents --rollouts out/rollouts.jsonl --prefixes out/prefixes.jsonl \
+  --output out/latent-cache.jsonl
 
-## Non-goals
+# 4. Score baselines and the judge on the same records (hybrid mode exercises the full pipeline;
+#    it replays completed episodes — the cutoff-time judge is --mode heuristic_surprise)
+uv run lewm-judge baselines --input out/prefixes.jsonl --output out/baselines.jsonl
+uv run lewm-judge judge --input out/prefixes.jsonl --latent-cache out/latent-cache.jsonl \
+  --mode hybrid_surprise --output out/judge.jsonl
 
-- universal reward modeling
-- giant world-model pretraining from scratch
-- broad claims across all RL domains
-- pretending a plausibility score is automatically a valid reward function
-- claiming that LeWorldModel-style surprise alone is a sufficient control signal
-- hiding heuristic components behind JEPA branding
+# 5. Evaluate baselines vs judge on the full slice (in-slice threshold)
+uv run lewm-judge evaluate --prefixes out/prefixes.jsonl --baselines out/baselines.jsonl \
+  --judge out/judge.jsonl --output out/summary.json
 
-## Immediate next moves
+# 6. Render the family report and the replay/demo bundle
+uv run lewm-judge report --summary out/summary.json --output-dir out/report
+uv run lewm-judge demo --prefixes out/prefixes.jsonl --baselines out/baselines.jsonl \
+  --judge out/judge.jsonl --families expert,misleading --output out/demo-artifact.md
+```
 
-1. widen failure and recoverability labeling beyond the current late-prefix doomed cases
-2. run larger held-out real slices so the threshold story survives beyond one smoke artifact
-3. make the replay surface richer with frame-level or rendered-state snapshots, not just scalar score drift
-4. only then push toward a more faithful JEPA-native judge implementation
+Everything lands where `--output`/`--output-dir` point: JSONL rows, the summary JSON,
+`family-report.md` plus a plot in the report dir, and a markdown demo artifact with sibling files
+(`<stem>-comparison.csv`, `<stem>-score-replay.csv`, `<stem>-push-v3-hard-disagreement-pack.csv`,
+`<stem>-timeline.png|.svg`). The checked-in runs under `artifacts/` are exactly these files,
+produced with `--source metaworld` for the real run.
+
+The walkthrough evaluates in-slice because on this synthetic data a held-out family split
+(calibrate on `weak`+`doomed`, evaluate on `expert`+`misleading`) leaves zero failure labels in
+the evaluation slice, so the evaluation metrics would honestly come back `null`. The real
+held-out invocation is in [docs/benchmark.md](docs/benchmark.md#reproduction).
+
+## Results
+
+Real Meta-World, held-out family split. All numbers from
+[`artifacts/hard-family-real-held-out-2026-04-28/summary-composite.json`](artifacts/hard-family-real-held-out-2026-04-28/summary-composite.json) —
+the prefix-only composite judge, which reads nothing past the cutoff.
+
+| Metric (evaluation slice, n=18) | Judge (composite) | Sparse-reward baseline | Progress baseline |
+|---|---:|---:|---:|
+| Failure hit rate | 1.00 | 1.00 | 1.00 |
+| False positive rate | **0.10** | 1.00 | 1.00 |
+| Pairwise ranking accuracy (= AUROC) | **1.00** | 0.50 | 0.556 |
+| Average precision | **1.00** | 0.444 | 0.485 |
+
+Threshold provenance: `judge_failure_threshold` 0.298006, calibration mode
+`held_out_family_split`, calibrated only on `weak`+`doomed` (9 failure / 9 non-failure prefixes),
+evaluated only on `expert`+`misleading` (8 failure / 10 non-failure), `family_overlap: false`.
+Judge rows (`judge-composite.jsonl`) record `judge_mode: composite_prefix_judge` (CLI
+`--mode heuristic_surprise`).
+
+Calibration is asymmetric by design: only the judge threshold is calibrated — the progress
+baseline keeps its fixed default (`progress_failure_threshold` 0.2, mode
+`fixed_progress_baseline`) and the sparse signal is binary. The ranking and average-precision
+rows are threshold-free and therefore calibration-fair; the false-positive row compares a
+calibrated judge operating point against uncalibrated baseline defaults.
+
+The hybrid replay-time variant
+([`summary.json`](artifacts/hard-family-real-held-out-2026-04-28/summary.json), threshold
+0.311141, `judge_mode: hybrid_prefix_latent_judge`) reproduces this table exactly. Its
+latent-mismatch feature is computed against post-cutoff observations by construction, so it is a
+replay/triage signal for completed episodes, not a cutoff-time verdict — see
+[docs/method.md](docs/method.md#cutoff-time-vs-replay-time-judging).
+
+Read the table with these caveats:
+
+- The evaluation slice is 18 prefixes from 12 episodes. It is small.
+- All three signals hit every labeled failure; the judge's win is entirely in false positives and
+  ranking, not detection.
+- The held-out run reuses the same rollout capture as the 2026-04-23 smoke runs. "Held-out" refers
+  to the family split and threshold provenance, not to new episodes.
+- The 1.00 AUROC/AP values are perfect separation on a tiny slice. This run proves the wiring and
+  the provenance story, not broad generalization.
+
+Secondary, synthetic hard-family benchmark (n=72, in-slice threshold 0.360053, failure-label
+coverage 0.056): judge false positive rate 0.029, pairwise accuracy / AUROC 0.985, average
+precision 0.667 vs sparse 0.50 / AP 0.056 and progress 0.147 / AP 0.061. The checked-in labels
+were stale — they predated the push-v3 label hardening shipped in 0.1.0 — so labels and summary
+were regenerated 2026-07-10 under rules unchanged since then, on the byte-identical seed-7
+rollouts; headline metrics unchanged. Source: [`artifacts/hard-family-synthetic-benchmark-2026-04-23-v2/summary.json`](artifacts/hard-family-synthetic-benchmark-2026-04-23-v2/summary.json).
+
+Full contract, protocol, and reproduction commands: [docs/benchmark.md](docs/benchmark.md).
+Artifact manifest with regeneration commands: [artifacts/README.md](artifacts/README.md).
+
+## What this is / is not
+
+This is a trajectory judge for partial manipulation rollouts: a verifier signal for early failure
+detection and trajectory ranking, benchmarked against sparse reward and a progress proxy on the
+same records, with file-based, replayable evidence and explicit threshold provenance. Today's
+signal is a hand-weighted composite heuristic plus a linear observation-space proxy;
+"world-model-derived" is the thesis and the roadmap, not the shipped mechanism.
+
+It is not a universal reward model, not a general judge for RL, and not a faithful
+LeWorldModel/JEPA reproduction. A plausibility score is not automatically a valid RL reward, one
+benchmark does not prove universal value, and heuristic components are never presented under JEPA
+branding. The benchmark claim always outranks the hype claim.
 
 ## Repo map
 
-- `docs/spec/PRODUCT-SPEC.md` — product scope, users, success criteria, and non-goals
-- `docs/spec/SYSTEM-SPEC.md` — architecture, data flow, judge pipeline, and output surfaces
-- `docs/spec/RESEARCH.md` — research rationale and literature-aligned framing
-- `docs/spec/MVP-STATUS.md` — current state and next milestone
-- `docs/spec/SCHEDULE.md` — phased build order
-- `docs/spec/EVAL-CONTRACT.md` — exact judging task and metrics
-- `docs/spec/JUDGE-SIGNAL-CONTRACT.md` — required signals, semantics, and allowed v1 implementations
-- `docs/spec/DATASET-CONTRACT.md` — rollout storage contract
-- `docs/spec/DEMO-CONTRACT.md` — what the demo must show
-- `docs/spec/RESULT-SCHEMA-CONTRACT.md` — benchmark output contract
-- `docs/spec/CLI-COMMAND-SPEC.md` — script/CLI surface to keep implementation honest
-- `docs/spec/FIRST-THREE-EXPERIMENTS.md` — pre-coding experiment pack
-- `docs/spec/DEEPENING-PASS-1.md` — thesis tightening pass
-- `docs/spec/DEEPENING-PASS-2.md` — benchmark tightening pass
-- `docs/spec/DEEPENING-PASS-3.md` — showcase tightening pass
-- `docs/spec/DEEPENING-PASS-4.md` — evaluation-honesty pass for held-out calibration provenance and benchmark reporting
-- `docs/spec/DEEPENING-PASS-5.md` — held-out artifact execution pass, push-v3 hardening, and score-replay reporting
-- `docs/spec/IMPLEMENTATION-PLAN.md` — exact build order, file plan, and verification path
-- `docs/rfcs/` — design decisions and v1/v2 boundaries
+- [docs/vision.md](docs/vision.md) — thesis, problem, success and failure criteria, claim discipline
+- [docs/method.md](docs/method.md) — architecture, evidence signals, judge design, labeling rules
+- [docs/benchmark.md](docs/benchmark.md) — benchmark contract, results with provenance, reproduction
+- [docs/contracts.md](docs/contracts.md) — every record schema and derived artifact filename
+- [docs/roadmap.md](docs/roadmap.md) — the JEPA-faithfulness upgrade path
+- [docs/rfcs/](docs/rfcs/) — design decisions, RFC-001 through RFC-010
+- [artifacts/](artifacts/) — checked-in benchmark runs and their manifest
 
-## Build order
+## Roadmap
 
-1. keep the problem and evaluation contracts stable
-2. harden the benchmark slice and labels
-3. strengthen held-out calibration and task-specific failure coverage
-4. improve replay/demo legibility
-5. only then invest in broader LeWorldModel faithfulness or extension work
+Replace the mean-pooled observation "latents" with a learned encoder and trained continuation
+predictor; widen failure/recoverability labels and run larger held-out real slices so the threshold
+story survives beyond one artifact; only then build a JEPA-style predicted-vs-actual latent judging
+surface. Full path: [docs/roadmap.md](docs/roadmap.md).
+
+## Citation
+
+A [CITATION.cff](CITATION.cff) is included; GitHub's "Cite this repository" button generates BibTeX and APA entries from it.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

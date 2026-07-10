@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    # UV_PYTHON is required for the matrix to be real: the tracked
+    # .python-version pins 3.11, and a plain `uv run` re-syncs the venv to
+    # that pin, so without this override the non-3.11 legs would silently
+    # recreate the venv with 3.11 and test the wrong interpreter.
+    # UV_PYTHON takes precedence over .python-version for every uv command.
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Check lockfile
+        run: uv lock --check
+      # The metaworld benchmark group is excluded: the test suite never
+      # imports metaworld, so CI only needs the dev group.
+      - name: Sync dependencies
+        run: uv sync --group dev
+      - name: Verify interpreter matches the matrix
+        run: |
+          uv run python -c "import sys; expected = '${{ matrix.python-version }}'; actual = f'{sys.version_info.major}.{sys.version_info.minor}'; assert actual == expected, f'{actual} != {expected}'"
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format check
+        run: uv run ruff format --check .
+      - name: Type check
+        run: uv run mypy src
+      - name: Tests
+        run: uv run pytest -q
+
+  # Packaging smoke test: the wheel must install into a clean venv with a
+  # working console script, importable package version, and shipped py.typed.
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Build sdist and wheel
+        run: uv build
+      - name: Check py.typed ships in the wheel
+        run: unzip -l dist/*.whl | grep -F "leworldmodel_judge/py.typed"
+      - name: Install wheel into a fresh venv and smoke-test
+        run: |
+          uv venv smoke-venv
+          uv pip install --python smoke-venv/bin/python dist/*.whl
+          smoke-venv/bin/lewm-judge --help
+          smoke-venv/bin/python -c "import leworldmodel_judge as m; assert m.__version__"

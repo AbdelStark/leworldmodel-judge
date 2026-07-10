@@ -1,5 +1,8 @@
 # RFC-002 — Why LeWorldModel
 
+- **Status:** Accepted
+- **Date:** 2026-04-23
+
 ## Decision
 Use **LeWorldModel** as the strategic conceptual anchor.
 

@@ -1,9 +1,22 @@
+"""The locked benchmark task set and task-argument resolution.
+
+``LOCKED_TASKS`` is the benchmark contract (docs/benchmark.md): exactly these
+three Meta-World tasks, in this order. Adding a task is a benchmark change,
+not a convenience edit.
+"""
+
 from __future__ import annotations
 
 LOCKED_TASKS = ("reach-v3", "push-v3", "pick-place-v3")
 
 
 def resolve_tasks(task_arg: str) -> list[str]:
+    """Resolve a task argument to an ordered, de-duplicated task list.
+
+    Accepts a single task id, a comma-separated subset of ``LOCKED_TASKS``,
+    or the literal ``"all"`` (the full locked set in canonical order).
+    Unknown task ids raise ``ValueError`` — there is no silent fallback.
+    """
     task_arg = task_arg.strip()
     if not task_arg:
         raise ValueError("task argument must not be empty")

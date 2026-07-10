@@ -1,5 +1,8 @@
 # RFC-003 — Environment choice
 
+- **Status:** Accepted
+- **Date:** 2026-04-23
+
 ## Decision
 Default to **Meta-World** first.
 Use **robosuite** only if its extra visual value clearly outweighs setup cost.

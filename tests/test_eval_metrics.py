@@ -1,4 +1,4 @@
-from leworldmodel_judge.evaluate import summarize
+from leworldmodel_judge.metrics import summarize
 
 
 def test_summary_reports_pairwise_ranking_accuracy_for_each_signal():
@@ -209,7 +209,10 @@ def test_summary_supports_disjoint_held_out_family_threshold_provenance():
     assert summary["calibration"]["judge"]["mode"] == "held_out_family_split"
     assert summary["calibration"]["provenance"]["family_overlap"] is False
     assert summary["calibration"]["provenance"]["calibration_families"] == ["doomed", "weak"]
-    assert summary["calibration"]["provenance"]["evaluation_families"] == ["adversarial", "misleading"]
+    assert summary["calibration"]["provenance"]["evaluation_families"] == [
+        "adversarial",
+        "misleading",
+    ]
     assert summary["calibration"]["judge"]["cohort_stats"]["count"] == 2
     assert summary["calibration"]["judge"]["evaluation_cohort"]["count"] == 2
     assert summary["calibration"]["judge"]["recommended_threshold"] == 0.81

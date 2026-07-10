@@ -1,5 +1,8 @@
 # RFC-005 — Benchmark and baselines
 
+- **Status:** Accepted
+- **Date:** 2026-04-23
+
 ## Decision
 The benchmark is mandatory and is part of the product, not an afterthought.
 

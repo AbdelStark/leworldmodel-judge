@@ -5,11 +5,11 @@ import sys
 from pathlib import Path
 
 from leworldmodel_judge.baselines import score_prefix
-from leworldmodel_judge.data import build_prefixes
-from leworldmodel_judge.evaluate import summarize
+from leworldmodel_judge.collect import collect_synthetic
 from leworldmodel_judge.judge import heuristic_surprise_score
+from leworldmodel_judge.metrics import summarize
+from leworldmodel_judge.prefixes import build_prefixes
 from leworldmodel_judge.tasks import LOCKED_TASKS, resolve_tasks
-from scripts.collect_rollouts import collect_synthetic
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -42,7 +42,7 @@ def test_resolve_tasks_all_uses_locked_benchmark_slice():
     assert resolve_tasks("all") == list(LOCKED_TASKS)
 
 
-def test_collect_rollouts_script_supports_all_task_bundle(tmp_path):
+def test_collect_cli_supports_all_task_bundle(tmp_path):
     output_path = tmp_path / "rollouts.jsonl"
     env = dict(os.environ)
     env["PYTHONPATH"] = str(ROOT / "src") + os.pathsep + env.get("PYTHONPATH", "")
@@ -50,7 +50,9 @@ def test_collect_rollouts_script_supports_all_task_bundle(tmp_path):
     subprocess.run(
         [
             sys.executable,
-            str(ROOT / "scripts" / "collect_rollouts.py"),
+            "-m",
+            "leworldmodel_judge",
+            "collect",
             "--source",
             "synthetic",
             "--task",

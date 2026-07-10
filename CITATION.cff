@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "leworldmodel-judge: a world model as a judge — early, auditable verdicts on partial robot-manipulation rollouts"
+type: software
+authors:
+  - given-names: Abdelhamid
+    family-names: Bakhta
+    alias: AbdelStark
+repository-code: "https://github.com/AbdelStark/leworldmodel-judge"
+license: MIT
+version: 0.2.0
+date-released: "2026-07-10"
+keywords:
+  - world-models
+  - jepa
+  - reinforcement-learning
+  - trajectory-evaluation
+  - metaworld

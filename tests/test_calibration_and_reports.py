@@ -1,9 +1,9 @@
 import csv
 from pathlib import Path
 
-from leworldmodel_judge.data import build_prefixes
-from leworldmodel_judge.evaluate import summarize
 from leworldmodel_judge.judge import heuristic_surprise_score
+from leworldmodel_judge.metrics import summarize
+from leworldmodel_judge.prefixes import build_prefixes
 
 
 def test_pick_place_late_grasp_without_transport_is_labeled_doomed():
@@ -131,7 +131,7 @@ def test_summary_reports_calibrated_thresholds_and_family_slices(tmp_path):
 
     report_dir = tmp_path / "report"
     report_dir.mkdir()
-    from scripts.render_family_report import render_family_report
+    from leworldmodel_judge.report import render_family_report
 
     outputs = render_family_report(summary, report_dir)
     assert Path(outputs["markdown"]).exists()
@@ -211,6 +211,7 @@ def test_render_demo_emits_markdown_csv_and_timeline_plot(tmp_path):
             "on_track_score": 0.16,
             "implausibility_score": 0.77,
             "uncertainty_score": 0.21,
+            "judge_mode": "composite_prefix_judge",
         },
         {
             "episode_id": "push-v3-weak-ep-0",
@@ -220,12 +221,13 @@ def test_render_demo_emits_markdown_csv_and_timeline_plot(tmp_path):
             "on_track_score": 0.82,
             "implausibility_score": 0.12,
             "uncertainty_score": 0.11,
+            "judge_mode": "composite_prefix_judge",
         },
     ]
 
+    from leworldmodel_judge.cli import main as cli_main
+    from leworldmodel_judge.demo import _comparison_rows
     from leworldmodel_judge.io import write_jsonl
-    from scripts.render_demo import _comparison_rows
-    from scripts.render_demo import main as render_demo_main
 
     prefixes_path = tmp_path / "prefixes.jsonl"
     baselines_path = tmp_path / "baselines.jsonl"
@@ -235,24 +237,20 @@ def test_render_demo_emits_markdown_csv_and_timeline_plot(tmp_path):
     write_jsonl(baselines_path, baselines)
     write_jsonl(judge_path, judge)
 
-    import sys
-
-    old_argv = sys.argv
-    sys.argv = [
-        "render_demo.py",
-        "--prefixes",
-        str(prefixes_path),
-        "--baselines",
-        str(baselines_path),
-        "--judge",
-        str(judge_path),
-        "--output",
-        str(output_path),
-    ]
-    try:
-        render_demo_main()
-    finally:
-        sys.argv = old_argv
+    exit_code = cli_main(
+        [
+            "demo",
+            "--prefixes",
+            str(prefixes_path),
+            "--baselines",
+            str(baselines_path),
+            "--judge",
+            str(judge_path),
+            "--output",
+            str(output_path),
+        ]
+    )
+    assert exit_code == 0
 
     csv_path = tmp_path / "demo-comparison.csv"
     plot_png_path = tmp_path / "demo-timeline.png"
@@ -266,6 +264,7 @@ def test_render_demo_emits_markdown_csv_and_timeline_plot(tmp_path):
     assert replay_path.exists()
 
     markdown = output_path.read_text()
+    assert "Judge mode: `composite_prefix_judge`" in markdown
     assert "Biggest baseline-vs-judge disagreements" in markdown
     assert "Push-v3 hard-family disagreement pack" in markdown
     assert "Score-over-time replays" in markdown
@@ -344,8 +343,8 @@ def test_render_demo_family_filter_limits_output_rows(tmp_path):
         },
     ]
 
+    from leworldmodel_judge.cli import main as cli_main
     from leworldmodel_judge.io import write_jsonl
-    from scripts.render_demo import main as render_demo_main
 
     prefixes_path = tmp_path / "prefixes.jsonl"
     baselines_path = tmp_path / "baselines.jsonl"
@@ -355,26 +354,22 @@ def test_render_demo_family_filter_limits_output_rows(tmp_path):
     write_jsonl(baselines_path, baselines)
     write_jsonl(judge_path, judge)
 
-    import sys
-
-    old_argv = sys.argv
-    sys.argv = [
-        "render_demo.py",
-        "--prefixes",
-        str(prefixes_path),
-        "--baselines",
-        str(baselines_path),
-        "--judge",
-        str(judge_path),
-        "--output",
-        str(output_path),
-        "--families",
-        "expert",
-    ]
-    try:
-        render_demo_main()
-    finally:
-        sys.argv = old_argv
+    exit_code = cli_main(
+        [
+            "demo",
+            "--prefixes",
+            str(prefixes_path),
+            "--baselines",
+            str(baselines_path),
+            "--judge",
+            str(judge_path),
+            "--output",
+            str(output_path),
+            "--families",
+            "expert",
+        ]
+    )
+    assert exit_code == 0
 
     rows = list(csv.DictReader((tmp_path / "demo-comparison.csv").open()))
     replay_rows = list(csv.DictReader((tmp_path / "demo-score-replay.csv").open()))

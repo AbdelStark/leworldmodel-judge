@@ -1,23 +1,44 @@
+"""Observation-space latent cache: a placeholder for a learned JEPA encoder.
+
+Honesty framing, stated plainly: nothing here is learned. The "latents" are
+mean-pooled raw observation windows, and the "predictor" is a linear
+extrapolation — the context mean plus the mean per-step delta scaled by the
+remaining horizon. This module exists so the hybrid judge and its cache
+contract (row schema, ``latent_cache_version``) are exercised end-to-end
+before a real JEPA encoder replaces the representation (docs/roadmap.md).
+Calling this a world model would be laundering; it is an observation-space
+proxy.
+
+Per prefix, the cache row records the context latent, the predicted and
+actual future latents, their norms, and two derived scalars:
+``latent_mismatch_score`` / ``latent_alignment_score`` — the mean absolute
+predicted-vs-actual gap clipped to [0, 1], and its complement.
+"""
+
 from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable
 from math import sqrt
+from typing import Any
+
+from ._math import clip01 as _clip01
 
 LATENT_CACHE_VERSION = "v0.1"
 
 
-def _clip01(value: float) -> float:
-    return max(0.0, min(1.0, float(value)))
+def _mean_or_zero(values: list[float]) -> float:
+    """Mean of ``values``; ``0.0`` on empty input.
 
-
-def _mean(values: list[float]) -> float:
+    Named to disambiguate from ``prefixes._mean``, which returns ``None`` on
+    empty input — the two absence contracts must not share a name.
+    """
     if not values:
         return 0.0
     return float(sum(values) / len(values))
 
 
-def _observation_window(steps: list[dict]) -> list[list[float]]:
+def _observation_window(steps: list[dict[str, Any]]) -> list[list[float]]:
     return [
         list(map(float, step.get("observation", []) or []))
         for step in steps
@@ -60,6 +81,7 @@ def _mean_step_delta(vectors: list[list[float]]) -> list[float]:
 
 
 def _predict_future_latent(context_vectors: list[list[float]], horizon: int) -> list[float]:
+    """Linear extrapolation: context mean + mean step delta scaled by horizon."""
     if not context_vectors:
         return []
     context_latent = _vector_mean(context_vectors)
@@ -84,8 +106,8 @@ def _mismatch_score(predicted: list[float], actual: list[float]) -> float:
     return round(_clip01(gap), 6)
 
 
-def _group_by_episode(steps: Iterable[dict]) -> dict[str, list[dict]]:
-    grouped: dict[str, list[dict]] = defaultdict(list)
+def _group_by_episode(steps: Iterable[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for step in steps:
         grouped[str(step["episode_id"])].append(step)
     for episode_steps in grouped.values():
@@ -93,9 +115,20 @@ def _group_by_episode(steps: Iterable[dict]) -> dict[str, list[dict]]:
     return dict(grouped)
 
 
-def build_latent_cache(prefixes: list[dict], steps: Iterable[dict]) -> list[dict]:
+def build_latent_cache(
+    prefixes: list[dict[str, Any]], steps: Iterable[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Build one latent-cache row per prefix from the full rollout steps.
+
+    The context window is the prefix's steps; the target window is everything
+    after the cutoff. When no post-cutoff observations exist, the actual
+    future latent falls back to the context latent (zero mismatch by
+    construction). Prefixes with no usable index or episode are skipped
+    rather than emitted with fabricated latents. Rows carry
+    ``latent_cache_version`` so downstream consumers can reject stale caches.
+    """
     grouped_steps = _group_by_episode(steps)
-    cache_rows: list[dict] = []
+    cache_rows: list[dict[str, Any]] = []
     for prefix in prefixes:
         episode_steps = grouped_steps.get(str(prefix["episode_id"]), [])
         prefix_index = int(prefix.get("prefix_index", 0))
