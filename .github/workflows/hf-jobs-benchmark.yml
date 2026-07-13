@@ -1,0 +1,39 @@
+name: hf-jobs-benchmark
+
+# Manual dispatch only (RFC-011 §5): launches a benchmark preset on Hugging Face Jobs and
+# verifies the published run. Requires an HF_TOKEN repository secret with write access.
+# Not part of required CI.
+
+on:
+  workflow_dispatch:
+    inputs:
+      preset:
+        description: Benchmark preset to run
+        type: choice
+        required: true
+        default: smoke
+        options:
+          - smoke
+          - synthetic-benchmark
+          - metaworld-benchmark
+
+# Keyed by preset: queuing several presets must not cancel each other's pending runs
+# (GitHub keeps at most one pending run per group).
+concurrency:
+  group: hf-jobs-benchmark-${{ inputs.preset }}
+  cancel-in-progress: false
+
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # preflight compares HEAD against origin/main
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+      - name: Launch preset and verify the published run
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: uv run jobs/launch.py launch --preset "${{ inputs.preset }}"

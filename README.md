@@ -89,6 +89,24 @@ The walkthrough evaluates in-slice because on this synthetic data a held-out fam
 the evaluation slice, so the evaluation metrics would honestly come back `null`. The real
 held-out invocation is in [docs/benchmark.md](docs/benchmark.md#reproduction).
 
+### Run it on Hugging Face Jobs
+
+The same pipeline runs unchanged on [Hugging Face Jobs](https://huggingface.co/docs/huggingface_hub/en/guides/jobs)
+([RFC-011](docs/rfcs/RFC-011-hf-jobs-pipeline.md)): a launcher pins the job's install to your
+pushed commit, the job publishes the complete run folder — capture of record, both judge
+outputs, reports, and a `provenance.json` with per-stage commands, timings, and checksums — to
+[`abdelstark/leworldmodel-judge-runs`](https://huggingface.co/datasets/abdelstark/leworldmodel-judge-runs),
+and a deterministic verify gate re-checks the published contract.
+
+```bash
+uv run jobs/launch.py launch --preset smoke                # end-to-end sanity, cpu-basic
+uv run jobs/launch.py launch --preset synthetic-benchmark  # 50 episodes/(task,family)
+uv run jobs/launch.py launch --preset metaworld-benchmark  # fresh real capture, cpu-upgrade
+```
+
+See [jobs/README.md](jobs/README.md), including the scoped
+[ml-intern](https://github.com/huggingface/ml-intern) operator/reviewer steps.
+
 ## Results
 
 Real Meta-World, held-out family split. All numbers from
@@ -161,8 +179,9 @@ branding. The benchmark claim always outranks the hype claim.
 - [docs/benchmark.md](docs/benchmark.md) — benchmark contract, results with provenance, reproduction
 - [docs/contracts.md](docs/contracts.md) — every record schema and derived artifact filename
 - [docs/roadmap.md](docs/roadmap.md) — the JEPA-faithfulness upgrade path
-- [docs/rfcs/](docs/rfcs/) — design decisions, RFC-001 through RFC-010
+- [docs/rfcs/](docs/rfcs/) — design decisions, RFC-001 through RFC-011
 - [artifacts/](artifacts/) — checked-in benchmark runs and their manifest
+- [jobs/](jobs/) — cloud benchmark runs on Hugging Face Jobs (launcher, payload, agent ops)
 
 ## Roadmap
 

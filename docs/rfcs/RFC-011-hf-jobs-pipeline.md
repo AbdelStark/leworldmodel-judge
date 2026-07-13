@@ -94,9 +94,9 @@ runs/<run_id>/
 
 `provenance.json` fields: `provenance_schema_version`, `run_id`, `preset`, `created_utc`,
 `git` (repo URL, pinned sha), `package` (name, installed version), `python`, `platform`,
-`hardware_flavor`, `job_env` (whitelisted `JOB_*`/`SPACE_*` keys), per-stage `commands` (exact
-argv) and wall-time seconds, `files` (per artifact: byte size, sha256, row count for JSONL), and
-`upload` (repo id, path prefix).
+`hardware_flavor`, `job_env` (whitelisted `JOB_*`/`SPACE_*` keys, secret-marker names dropped),
+`stages` (per stage: exact argv and wall-clock seconds), `files` (per artifact: byte size,
+sha256, row count for JSONL), and `upload` (repo id, path prefix).
 
 The `verify` gate checks: required file set for the preset; `summary*.json` parse with
 `thresholds`, `calibration.provenance` (families disjoint, mode `held_out_family_split`),
@@ -115,8 +115,9 @@ The pipeline demonstrates supervised agent operation with Hugging Face's `ml-int
 (github.com/huggingface/ml-intern), pinned to an HF-router model (`moonshotai/Kimi-K2-Instruct`)
 so it runs on `HF_TOKEN` alone:
 
-- **Operator role.** `ml-intern` launches and monitors the `smoke` run through its `hf_jobs`
-  tool from a scoped prompt (CPU flavor, explicit timeout, no other operations).
+- **Operator role.** `ml-intern` launches the `smoke` run by driving the repo launcher (so
+  preflight and run identity stay deterministic), then independently confirms the job's state
+  through read-only `hf_jobs` operations (ps, inspect, logs) and writes an operations report.
 - **Reviewer role.** After the benchmark runs publish, `ml-intern` receives the published
   summaries plus the checked-in 2026-04-28 artifact and writes an independent run review
   (`intern-review.md`): metric deltas, provenance audit, anomalies.
@@ -125,8 +126,17 @@ Both transcripts (stdout and the session log) ship with the run artifacts under
 `runs/<run_id>/agent/`. Guardrails, stated because headless `ml-intern` auto-approves
 everything: prompts are single-purpose and enumerate permitted operations; only CPU flavors; the
 review is advisory — the merge gate remains `jobs/launch.py verify`, which is deterministic. The
-agent's exit code is not a signal (it exits 0 on errors); the launcher checks for the expected
-output files instead.
+agent's exit code is not a signal (it exits 0 on errors); the wrapper checks for the expected
+output files instead, and still collects and ships whatever transcript exists when a turn fails
+or times out — a paid run without its transcript is the worse failure mode.
+
+Two hazards of the agent itself are handled explicitly. First, `ml-intern` records its full
+trajectory to `session_logs/` and, when `HF_SESSION_UPLOAD_TOKEN` is set, auto-uploads it to a
+third-party dataset repo (`akseljoonas/hf-agent-sessions`); the wrapper strips that variable —
+and every other credential except `HF_TOKEN` — from the agent's environment, so transcripts
+leave the machine only through this pipeline. Second, transcripts are published verbatim to a
+public repo, so the wrapper redacts token-shaped strings (`hf_…`, `gh*_…`, `sk-…`, `AKIA…`)
+from every collected file before upload.
 
 ### 5. CI dispatch (optional path)
 

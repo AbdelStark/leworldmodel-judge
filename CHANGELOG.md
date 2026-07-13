@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- RFC-011 cloud benchmark runs on Hugging Face Jobs: `jobs/run_benchmark.py`
+  (remote payload with `smoke` / `synthetic-benchmark` / `metaworld-benchmark`
+  presets, cloud `provenance.json`, publication to the
+  `abdelstark/leworldmodel-judge-runs` dataset repo), `jobs/launch.py`
+  (preflight, launch, contract verify gate, dataset card generator),
+  scoped `ml-intern` operator/reviewer steps (`jobs/intern_ops.py` +
+  versioned prompts), and a manual-dispatch `hf-jobs-benchmark` workflow.
+  The library itself is unchanged and stays stdlib-only.
+
 ## [0.2.0] - 2026-07-10
 
 ### Added
