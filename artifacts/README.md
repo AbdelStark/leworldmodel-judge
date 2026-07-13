@@ -1,7 +1,7 @@
 # Artifacts
 
-Two curated benchmark runs. Everything the repo claims numerically traces back to a
-`summary.json` in one of these directories.
+Three curated benchmark runs. Everything the repo claims numerically traces back to a
+`summary.json` (or `summary-composite.json`) in one of these directories.
 
 Layout rule: `rollouts.jsonl` is the checked-in input of record for each run. Every
 other file (prefixes, latent cache, baseline rows, judge rows, summary, report, demo
@@ -130,6 +130,73 @@ uv run lewm-judge collect --source metaworld --task all --episodes 1 --max-steps
 
 Re-running it requires the `metaworld` extra (pulls MuJoCo) and produces a new physics
 capture, not this file. That is why the rollouts are checked in.
+
+---
+
+## `hard-family-real-fresh-capture-2026-07-13/` — fresh capture at 5×, collected on HF Jobs
+
+**What it is.** Real Meta-World rollouts collected **after** the 0.2.0 label-rule freeze
+(base seed `1013` — new episodes, not the 2026-04-23 capture): 3 tasks × 4 policy families ×
+5 episodes = 60 episodes, max 75 steps, 180 prefixes at cutoffs 0.25/0.50/0.75. Scored with
+**both** judges on the same prefixes (`judge-composite.jsonl`, `judge-hybrid.jsonl`) and
+evaluated with the family-held-out threshold (calibrated on `doomed`+`weak`, evaluated on
+`expert`+`misleading`). The run was executed on Hugging Face Jobs
+([RFC-011](../docs/rfcs/RFC-011-hf-jobs-pipeline.md)) with the package pinned to commit
+`666670e`; this directory is a verbatim copy of the published, contract-verified run
+[`runs/metaworld-benchmark-20260713-080743-g666670e`](https://huggingface.co/datasets/abdelstark/leworldmodel-judge-runs/tree/main/runs/metaworld-benchmark-20260713-080743-g666670e),
+whose `agent/` folder also holds the `ml-intern` operator/review transcripts (not mirrored
+here).
+
+**Dates.** Collected, scored, evaluated, and published 2026-07-13 in a single cloud run.
+
+**Claim it supports.** The held-out threshold story survives a fresh capture at 5× the
+evaluation cohort: the calibrated operating point transfers (threshold `0.29768` here vs
+`0.298006` on the 2026-04-28 capture), and the judge keeps a large ranking gap over both
+baselines (pairwise 0.978 vs 0.50/0.554) while perfect separation honestly degrades
+(hit rate 0.949, FPR 0.137 at n=90).
+
+**Headline numbers** (evaluation slice, n=90; jq paths into `summary-composite.json`, judge
+rows `judge-composite.jsonl`, `judge_mode: composite_prefix_judge`):
+
+| Metric | Judge (composite) | Sparse-reward baseline | Progress baseline |
+|---|---:|---:|---:|
+| Failure hit rate | 0.948718 | 1.0 | 1.0 |
+| False positive rate | 0.137255 | 1.0 | 1.0 |
+| Pairwise ranking accuracy / AUROC | 0.977878 | 0.5 | 0.554299 |
+| Average precision | 0.970748 | 0.433333 | 0.463337 |
+
+- JSON paths mirror the canonical real run above (`.overall.judge_*`,
+  `.overall.baseline_sparse_absence_*`, `.overall.baseline_progress_*`)
+- Threshold: `0.29768` at `.thresholds.judge_failure_threshold`, mode
+  `held_out_family_split`, `family_overlap: false`; cohorts 90/90 prefixes
+  (39 failure / 51 non-failure in each)
+- Hybrid replay-time variant (`summary.json`, `judge-hybrid.jsonl`,
+  `judge_mode: hybrid_prefix_latent_judge`): threshold `0.313437`, hit `0.923077`,
+  FPR `0.137255`, pairwise `0.97637`, AP `0.970098`
+- Misses concentrate in `push-v3` (`.tasks."push-v3".judge_failure_hit_rate` = `0.833333`);
+  false positives concentrate in `pick-place-v3`
+  (`.tasks."pick-place-v3".judge_false_positive_rate` = `0.26087`)
+
+**Caveats.**
+
+- 90 evaluation prefixes from 60 episodes is bigger than n=18, still modest.
+- Both baselines hit 1.0 detection; the judge's win remains false positives and ranking.
+- Labels and judge share the evidence family (see
+  [method.md](../docs/method.md#label-circularity)); the capture is fresh but the
+  circularity caveat is unchanged.
+
+**Contents.** The RFC-008 file surface (rollouts of record, prefixes, latent cache,
+baselines, both judge files, both summaries, report, demo bundle) plus `provenance.json` —
+cloud run provenance with the pinned git sha, installed package version, per-stage argv and
+wall-clock, and sha256 of every file.
+
+**Regeneration.** `uv run jobs/launch.py launch --preset metaworld-benchmark` reruns the
+protocol on Hugging Face Jobs (new physics capture, new run id — Meta-World is not
+byte-reproducible across simulator builds). Everything downstream of the checked-in
+`rollouts.jsonl` regenerates deterministically with the same command shapes as the canonical
+real run, substituting `RUN=artifacts/hard-family-real-fresh-capture-2026-07-13`, judge mode
+`heuristic_surprise` → `judge-composite.jsonl` / `summary-composite.json` alongside the
+hybrid pair, and `--calibration-families weak,doomed`.
 
 ---
 

@@ -149,6 +149,19 @@ Read the table with these caveats:
 - The 1.00 AUROC/AP values are perfect separation on a tiny slice. This run proves the wiring and
   the provenance story, not broad generalization.
 
+**Fresh capture at 5× (2026-07-13, collected on Hugging Face Jobs).** The first capture taken
+after the label rules were frozen — new episodes, seed 1013, 90 held-out evaluation prefixes
+instead of 18 — replicates the story with honest degradation: the calibrated threshold transfers
+(0.29768 vs 0.298006 from disjoint episodes), the composite judge scores hit rate 0.949 / FPR
+0.137 / pairwise 0.978 / AP 0.971 against the same blunt baselines (sparse 0.50 pairwise,
+progress 0.554), and perfect separation does not survive the bigger slice — as expected. Source:
+[`artifacts/hard-family-real-fresh-capture-2026-07-13/summary-composite.json`](artifacts/hard-family-real-fresh-capture-2026-07-13/summary-composite.json)
+(`judge_mode: composite_prefix_judge`), details in
+[docs/benchmark.md](docs/benchmark.md#fresh-capture-at-5-held-out-family-split-on-new-episodes),
+full cloud provenance in the artifact's `provenance.json`, published run (with `ml-intern`
+operator/review transcripts) on the
+[runs dataset](https://huggingface.co/datasets/abdelstark/leworldmodel-judge-runs).
+
 Secondary, synthetic hard-family benchmark (n=72, in-slice threshold 0.360053, failure-label
 coverage 0.056): judge false positive rate 0.029, pairwise accuracy / AUROC 0.985, average
 precision 0.667 vs sparse 0.50 / AP 0.056 and progress 0.147 / AP 0.061. The checked-in labels

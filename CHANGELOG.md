@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   scoped `ml-intern` operator/reviewer steps (`jobs/intern_ops.py` +
   versioned prompts), and a manual-dispatch `hf-jobs-benchmark` workflow.
   The library itself is unchanged and stays stdlib-only.
+- `artifacts/hard-family-real-fresh-capture-2026-07-13/`: the first Meta-World
+  capture collected after the 0.2.0 label-rule freeze (seed 1013, 60 episodes,
+  90 held-out evaluation prefixes vs 18), executed and published on Hugging
+  Face Jobs. Composite judge holds hit rate 0.949 / FPR 0.137 / pairwise 0.978
+  on the fresh slice and the calibrated threshold transfers across captures
+  (0.29768 vs 0.298006). Results in `docs/benchmark.md`, manifest entry in
+  `artifacts/README.md`.
 
 ## [0.2.0] - 2026-07-10
 

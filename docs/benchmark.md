@@ -169,6 +169,50 @@ most a few hundredths (max +0.036, mean +0.011) and changed no reported number. 
    partly circular; a single shared-family feature (distance regret) ranks nearly as well as the
    judge on these slices. See [method.md](method.md#label-circularity).
 
+### Fresh capture at 5×: held-out family split on new episodes
+
+Source: `artifacts/hard-family-real-fresh-capture-2026-07-13/summary-composite.json` — composite
+judge (`judge_mode: composite_prefix_judge`). This is the first capture collected **after** the
+label rules were frozen at 0.2.0, and it directly addresses headline caveats 3 and 5: new
+episodes (base seed `1013`, not the 2026-04-23 capture) collected with rules that were not
+revised against them. Collected on Hugging Face Jobs (`cpu-upgrade`, ~25 s of stage wall time;
+[RFC-011](rfcs/RFC-011-hf-jobs-pipeline.md)): `metaworld==3.0.0`, `--max-steps 75`, 5 episodes
+per (task, family) — 60 episodes, 180 prefixes. Calibrated **only** on `weak` + `doomed`
+(90 prefixes), evaluated **only** on `expert` + `misleading` (90 prefixes, 39 failure / 51
+non-failure), mode `held_out_family_split`, `family_overlap: false`.
+
+| Metric (evaluation slice, n=90) | Judge (composite) | Sparse-reward baseline | Progress baseline |
+|---|---:|---:|---:|
+| Failure hit rate | **0.949** | 1.00 | 1.00 |
+| False positive rate | **0.137** | 1.00 | 1.00 |
+| Pairwise ranking accuracy (= AUROC) | **0.978** | 0.50 | 0.554 |
+| Average precision | **0.971** | 0.433 | 0.463 |
+
+Two results worth stating plainly:
+
+- **The operating point transfers.** Calibrating on this capture's `weak`+`doomed` cohort
+  yields threshold `0.29768`, versus `0.298006` on the 2026-04-28 capture — the same operating
+  point to three decimals, recovered from disjoint episodes.
+- **Perfect separation does not survive 5× more prefixes.** The n=18 slice's 1.00/1.00/1.00
+  rows relax to 0.949 hit rate (misses concentrate in `push-v3` `misleading`, per-task hit
+  0.833 there), 0.137 FPR (false positives concentrate in `pick-place-v3`, per-task FPR 0.261),
+  and 0.978 ranking accuracy. This is the honest degradation the roadmap's "larger real held-out
+  slices" item existed to expose; the ranking-quality gap over both baselines is intact.
+
+The hybrid replay-time variant (`summary.json`, threshold `0.313437`, `judge_mode:
+hybrid_prefix_latent_judge`) scores hit rate `0.923`, FPR `0.137`, pairwise `0.976`, AP `0.970`
+on the same split — replay/triage signal only, as ever (see
+[method.md](method.md#cutoff-time-vs-replay-time-judging)).
+
+Caveats: the cohort is still modest (90 evaluation prefixes from 60 episodes); headline caveats
+1, 2, 4 and 6 apply unchanged (baselines also hit 1.0 — the win is FPR and ranking; the labeler
+and judge still share evidence). Meta-World collection is not byte-reproducible across simulator
+builds, so `rollouts.jsonl` is checked in as the input of record. Full cloud provenance —
+pinned git sha `666670e`, package `0.2.0`, per-stage commands/timings, sha256 of every file —
+ships in the artifact's `provenance.json`, and the published copy (with the `ml-intern`
+operator/review transcripts) lives at
+[`runs/metaworld-benchmark-20260713-080743-g666670e`](https://huggingface.co/datasets/abdelstark/leworldmodel-judge-runs/tree/main/runs/metaworld-benchmark-20260713-080743-g666670e).
+
 ### Secondary: synthetic hard-family benchmark (in-slice)
 
 Source: `artifacts/hard-family-synthetic-benchmark-2026-04-23-v2/summary.json`. Judge rows
@@ -354,6 +398,26 @@ uv run lewm-judge demo \
 ```
 
 See `artifacts/README.md` for the per-run manifest.
+
+### Fresh capture (`artifacts/hard-family-real-fresh-capture-2026-07-13/`)
+
+This run was collected and evaluated on Hugging Face Jobs
+([RFC-011](rfcs/RFC-011-hf-jobs-pipeline.md)); the launcher pins the job's install to a pushed
+commit and gates the published folder against the run contract:
+
+```bash
+uv run jobs/launch.py launch --preset metaworld-benchmark
+# equivalent local pipeline: lewm-judge collect --source metaworld --task all --episodes 5 \
+#   --max-steps 75 --seed 1013 --policy-family expert,weak,doomed,misleading, then the same
+#   prefixes/latents/baselines/judge×2/evaluate×2 (--calibration-families weak,doomed
+#   --evaluation-families expert,misleading)/report/demo chain as above.
+```
+
+Meta-World capture is not byte-reproducible across simulator builds, so a rerun reproduces the
+protocol, not the bytes; the checked-in `rollouts.jsonl` is the input of record, everything
+downstream regenerates deterministically from it, and `provenance.json` carries the exact stage
+argv, timings, and per-file sha256 of the published run. The published copy is verified by
+`uv run jobs/launch.py verify --run-id metaworld-benchmark-20260713-080743-g666670e`.
 
 ## Benchmark questions
 

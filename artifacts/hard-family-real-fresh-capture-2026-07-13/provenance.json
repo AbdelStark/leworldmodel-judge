@@ -1,0 +1,244 @@
+{
+  "provenance_schema_version": "1.0",
+  "run_id": "metaworld-benchmark-20260713-080743-g666670e",
+  "preset": "metaworld-benchmark",
+  "created_utc": "2026-07-13T08:08:03+00:00",
+  "git": {
+    "repo": "https://github.com/AbdelStark/leworldmodel-judge",
+    "sha": "666670e1c3f7b962a9dacf61d7eee063c925ed5a"
+  },
+  "package": {
+    "name": "leworldmodel-judge",
+    "version": "0.2.0"
+  },
+  "python": "3.11.2 (main, Apr 28 2025, 14:11:48) [GCC 12.2.0]",
+  "platform": "Linux-6.12.90-120.164.amzn2023.x86_64-x86_64-with-glibc2.36",
+  "hardware_flavor": "cpu-upgrade",
+  "job_env": {
+    "JOB_ID": "6a549cd1e4a4e82c0b590ef1"
+  },
+  "stages": [
+    {
+      "stage": "collect",
+      "argv": [
+        "collect",
+        "--source",
+        "metaworld",
+        "--task",
+        "all",
+        "--episodes",
+        "5",
+        "--policy-family",
+        "expert,weak,doomed,misleading",
+        "--seed",
+        "1013",
+        "--output",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/rollouts.jsonl",
+        "--max-steps",
+        "75"
+      ],
+      "wall_seconds": 21.98
+    },
+    {
+      "stage": "prefixes",
+      "argv": [
+        "prefixes",
+        "--input",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/rollouts.jsonl",
+        "--output",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/prefixes.jsonl"
+      ],
+      "wall_seconds": 0.148
+    },
+    {
+      "stage": "latents",
+      "argv": [
+        "latents",
+        "--rollouts",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/rollouts.jsonl",
+        "--prefixes",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/prefixes.jsonl",
+        "--output",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/latent-cache.jsonl"
+      ],
+      "wall_seconds": 0.255
+    },
+    {
+      "stage": "baselines",
+      "argv": [
+        "baselines",
+        "--input",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/prefixes.jsonl",
+        "--output",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/baselines.jsonl"
+      ],
+      "wall_seconds": 0.052
+    },
+    {
+      "stage": "judge-composite",
+      "argv": [
+        "judge",
+        "--input",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/prefixes.jsonl",
+        "--mode",
+        "heuristic_surprise",
+        "--output",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/judge-composite.jsonl"
+      ],
+      "wall_seconds": 0.053
+    },
+    {
+      "stage": "judge-hybrid",
+      "argv": [
+        "judge",
+        "--input",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/prefixes.jsonl",
+        "--mode",
+        "hybrid_surprise",
+        "--latent-cache",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/latent-cache.jsonl",
+        "--output",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/judge-hybrid.jsonl"
+      ],
+      "wall_seconds": 0.07
+    },
+    {
+      "stage": "evaluate-composite",
+      "argv": [
+        "evaluate",
+        "--prefixes",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/prefixes.jsonl",
+        "--baselines",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/baselines.jsonl",
+        "--judge",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/judge-composite.jsonl",
+        "--output",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/summary-composite.json",
+        "--calibration-families",
+        "weak,doomed",
+        "--evaluation-families",
+        "expert,misleading"
+      ],
+      "wall_seconds": 0.056
+    },
+    {
+      "stage": "evaluate-hybrid",
+      "argv": [
+        "evaluate",
+        "--prefixes",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/prefixes.jsonl",
+        "--baselines",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/baselines.jsonl",
+        "--judge",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/judge-hybrid.jsonl",
+        "--output",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/summary.json",
+        "--calibration-families",
+        "weak,doomed",
+        "--evaluation-families",
+        "expert,misleading"
+      ],
+      "wall_seconds": 0.056
+    },
+    {
+      "stage": "report",
+      "argv": [
+        "report",
+        "--summary",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/summary.json",
+        "--output-dir",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/report"
+      ],
+      "wall_seconds": 1.388
+    },
+    {
+      "stage": "demo",
+      "argv": [
+        "demo",
+        "--prefixes",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/prefixes.jsonl",
+        "--baselines",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/baselines.jsonl",
+        "--judge",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/judge-hybrid.jsonl",
+        "--families",
+        "expert,misleading",
+        "--output",
+        "/tmp/lewm-metaworld-benchmark-20260713-080743-g666670e-ud49m_68/demo-artifact.md"
+      ],
+      "wall_seconds": 0.655
+    }
+  ],
+  "files": {
+    "baselines.jsonl": {
+      "bytes": 37125,
+      "sha256": "55e0815762fbfe539812b598249770f5922a988b8dea6dfa720c019ac656323c",
+      "rows": 180
+    },
+    "demo-artifact-comparison.csv": {
+      "bytes": 19675,
+      "sha256": "5e51a6d22bfd2bd1c90d8dc97885c17a0fa9e8b43022b613f4e81a26273b958d"
+    },
+    "demo-artifact-push-v3-hard-disagreement-pack.csv": {
+      "bytes": 2229,
+      "sha256": "f65b777c512b8d24be3ee6b7b5fff0fda6b5563a91a521071dab0f903754292f"
+    },
+    "demo-artifact-score-replay.csv": {
+      "bytes": 6579,
+      "sha256": "bb87a5572fd330f5a6450900055e7c85d00edbd37f4f69a770bc40b4a22852a5"
+    },
+    "demo-artifact-timeline.png": {
+      "bytes": 48204,
+      "sha256": "269e522c7ede61b9b64ee22ab70cd1cf0d322cdb9d6ab8a38e6bfb8e50afd7e3"
+    },
+    "demo-artifact.md": {
+      "bytes": 5079,
+      "sha256": "be1df22f0716109e17a2338a690569e46d45d40a5112c967b1a770b62159fd0a"
+    },
+    "judge-composite.jsonl": {
+      "bytes": 86338,
+      "sha256": "53236360db81099d2f7488d6a8725339f920e579020c5098469417db2ccf134b",
+      "rows": 180
+    },
+    "judge-hybrid.jsonl": {
+      "bytes": 120251,
+      "sha256": "f21d15f12c6557e5ef1a40149e2b2a1059e91ab3461340a3a337d497952ab256",
+      "rows": 180
+    },
+    "latent-cache.jsonl": {
+      "bytes": 232496,
+      "sha256": "10b5e50e909bd4f3141838e8a5cf6ca7ded32ef0e56b8d19a5a58d0ddd6397b2",
+      "rows": 180
+    },
+    "prefixes.jsonl": {
+      "bytes": 118037,
+      "sha256": "a7e8e08124e6bb0b01047bad4bff2bbd301fed628fe42a232d6d9c7e27bf76e3",
+      "rows": 180
+    },
+    "report/family-report.md": {
+      "bytes": 1623,
+      "sha256": "044c1368e15535901b771f82e973807463fe6fe562ed3086e9eb5ebd2c257c70"
+    },
+    "report/family-report.png": {
+      "bytes": 35090,
+      "sha256": "b7b7f50fcb3e749c776d22c7e5fe64bc3f76ad639cfff56e25160de5d63afb24"
+    },
+    "rollouts.jsonl": {
+      "bytes": 4939625,
+      "sha256": "aba333859bbb539a0de0984fe866c3291ab9049582cd995aaf10bd01772acff9",
+      "rows": 4500
+    },
+    "summary-composite.json": {
+      "bytes": 8056,
+      "sha256": "ca91e539aed26e007db29b6f33dc97f9ae408cde9ec2b9591af864a9ad346199"
+    },
+    "summary.json": {
+      "bytes": 8048,
+      "sha256": "115883e943e9cc6c5fb158edff53175c469c28228a6c921fd53093420ec71d46"
+    }
+  },
+  "upload": {
+    "repo_id": "abdelstark/leworldmodel-judge-runs",
+    "path_in_repo": "runs/metaworld-benchmark-20260713-080743-g666670e"
+  }
+}
