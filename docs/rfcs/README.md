@@ -17,6 +17,7 @@ not rewrites.
 | [RFC-008](RFC-008-result-and-artifact-contracts.md) — Result and artifact contracts | All benchmark and demo outputs are file-based and reproducible | Accepted (2026-04-23) |
 | [RFC-009](RFC-009-public-positioning-and-claim-discipline.md) — Public positioning and claim discipline | Public language stays narrower than max ambition; the benchmark claim outranks the hype claim | Accepted (2026-04-23) |
 | [RFC-010](RFC-010-repo-restructure.md) — Repository restructure | Single `lewm-judge` CLI, five curated docs, curated artifacts; behavior and schemas preserved | Accepted (2026-07-10) |
+| [RFC-011](RFC-011-hf-jobs-pipeline.md) — Cloud benchmark runs | The pipeline runs unchanged on Hugging Face Jobs; every run publishes a verified, self-describing artifact folder; `ml-intern` operates under scoped prompts | Accepted (2026-07-13) |
 
 Curated documentation built on these decisions: [vision](../vision.md), [method](../method.md),
 [benchmark](../benchmark.md), [contracts](../contracts.md), [roadmap](../roadmap.md).
