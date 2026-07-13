@@ -9,6 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-2f9e44?style=for-the-badge)](LICENSE)
 
 [![Companion paper](https://img.shields.io/badge/paper-companion_preprint-B31B1B?style=for-the-badge)](docs/paper/leworldmodel-judge.pdf)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21335887-007ec6?style=for-the-badge)](https://doi.org/10.5281/zenodo.21335887)
 [![HF runs dataset](https://img.shields.io/badge/%F0%9F%A4%97_datasets-leworldmodel--judge--runs-FFD21E?style=for-the-badge)](https://huggingface.co/datasets/abdelstark/leworldmodel-judge-runs)
 [![Benchmark artifacts](https://img.shields.io/badge/artifacts-3_checked--in_runs-4c6ef5?style=for-the-badge)](artifacts/)
 
@@ -233,7 +234,8 @@ BibTeX and APA entries from it. To cite the companion paper:
   author = {Abdelhamid Bakhta},
   year   = {2026},
   note   = {Companion paper to leworldmodel-judge v0.2.0},
-  url    = {https://github.com/AbdelStark/leworldmodel-judge/blob/main/docs/paper/leworldmodel-judge.pdf}
+  doi    = {10.5281/zenodo.21335887},
+  url    = {https://doi.org/10.5281/zenodo.21335887}
 }
 ```
 
