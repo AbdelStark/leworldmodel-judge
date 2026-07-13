@@ -11,3 +11,12 @@ build/
 .coverage
 out/
 .claude/
+
+# LaTeX build residue (docs/paper)
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+docs/paper/main.pdf

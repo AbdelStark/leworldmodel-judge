@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on the fresh slice and the calibrated threshold transfers across captures
   (0.29768 vs 0.298006). Results in `docs/benchmark.md`, manifest entry in
   `artifacts/README.md`.
+- Companion preprint under `docs/paper/`: LaTeX sources, a bibliography whose
+  every entry was fetched from arXiv/CrossRef/DBLP/PMLR metadata, a figures
+  pipeline that regenerates every plot from the checked-in artifacts, a
+  Makefile (tectonic or pdflatex+bibtex), and the built PDF
+  (`docs/paper/leworldmodel-judge.pdf`). README rebuilt around it with
+  for-the-badge badges linking the paper, the Hugging Face runs dataset, and
+  the checked-in artifacts.
 
 ## [0.2.0] - 2026-07-10
 
